@@ -607,6 +607,28 @@ h1 {
 .tarot-card { animation: cardEntrance 0.5s ease both, floatCard 3s ease-in-out 0.5s infinite; }
 .tarot-card.flipped { animation: none; }
 
+
+/* ── ALT TOGGLE ── */
+#alt-toggle {
+  position: fixed;
+  bottom: 52px;
+  right: 16px;
+  z-index: 9999;
+  background: rgba(10,6,20,0.9);
+  border: 1px solid #6b3fa0;
+  color: #9b6fd0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+#alt-toggle.active {
+  background: rgba(107,63,160,0.3);
+  border-color: #c8a84b;
+  color: #c8a84b;
+}
 /* ── DEBUG CONSOLE ── */
 #debug-toggle {
   position: fixed;
@@ -693,6 +715,8 @@ h1 {
 
 [data-theme="forest"] #bg-canvas { filter: hue-rotate(120deg); }
 </style>
+  <script src="readings-standard.js"></script>
+  <script src="readings-alt.js"></script>
 </head>
 <body>
 
@@ -757,6 +781,8 @@ h1 {
     </div>
   </div>
 
+  <!-- ALT MODE TOGGLE -->
+  <button id="alt-toggle" onclick="toggleAlt()">🃏 Alt</button>
   <!-- DEBUG CONSOLE -->
   <button id="debug-toggle" onclick="toggleDebug()">🔍 Debug</button>
   <span id="debug-badge"></span>
@@ -831,7 +857,7 @@ function clearDebug() {
   });
 })();
 
-var APP_VERSION = 'v1-12';
+var APP_VERSION = 'v1-13';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -1922,28 +1948,78 @@ function startNewGame() {
 resetBtn.addEventListener('click', function() { startNewGame(); });
 
 // ══════════════════════════════════════════════════════════
-// AI READING via Anthropic API
+// ALT MODE
 // ══════════════════════════════════════════════════════════
-function fetchReading() {
-  dlog('Fetching AI reading...', 'info');
-  dlog('Origin: ' + location.origin + ' | Protocol: ' + location.protocol, 'info');
-  readingPanel.classList.add('visible');
-  loadingIndicator.classList.add('show');
-  cardsReading.innerHTML = '';
-  overallBlock.style.display = 'none';
+var altMode = false;
 
+function toggleAlt() {
+  altMode = !altMode;
+  var btn = document.getElementById('alt-toggle');
+  if (btn) btn.className = altMode ? 'active' : '';
+  dlog('Alt mode: ' + (altMode ? 'ON (humorous)' : 'OFF (standard)'), 'info');
+  startNewGame();
+}
+
+// ══════════════════════════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════════════════════════
+
+// Decode XOR-encoded Gemini key (pad=90)
+function _gk() {
+  var enc = [27,19,32,59,9,35,27,18,0,44,111,50,19,60,46,44,50,53,21,25,27,19,44,30,98,104,17,50,5,51,46,57,15,104,15,14,9,61,61];
+  return enc.map(function(b){ return String.fromCharCode(b ^ 90); }).join('');
+}
+
+function buildPrompt(altMode) {
   var labels = SPREAD_LABELS[currentSpread];
   var cardsDesc = drawnCards.map(function(c, i) {
     return labels[i] + ': ' + c.name + (c.reversed ? ' (Reversed)' : '') + ' — Keywords: ' + c.keywords.join(', ');
   }).join('\n');
   var spreadName = {1:'Single Card',3:'Past-Present-Future',5:'5-Card Celtic Cross'}[currentSpread];
+  var toneNote = altMode
+    ? '\n\nIMPORTANT TONE NOTE: The seeker has requested the humorous oracle mode. Be witty, ironic, and use dark humor freely. You may reference absurdity, include a well-placed joke or wry observation about the human condition. Stay accurate to the card meanings but deliver them with a comedian\'s timing and a philosopher\'s honesty. Do not be cruel, but do not be precious either.'
+    : '';
+  return 'You are a wise, poetic Tarot oracle. A seeker has drawn these cards in a ' + spreadName + ' spread:\n\n'
+    + cardsDesc
+    + '\n\nPlease provide:\n1. For each card position, write a flowing 3-4 sentence interpretation (label with position name and card name)\n2. A "Overall Message" paragraph synthesizing the whole spread — make it feel like a natural reading of these specific cards together, not a generic summary.\n\nFormat your response as JSON exactly like this (no markdown fences):\n{\n  "cards": [\n    {"position": "Past", "name": "The Fool", "reading": "..."},\n    ...\n  ],\n  "overall": "..."\n}'
+    + toneNote;
+}
 
-  var prompt = 'You are a wise, poetic Tarot oracle. A seeker has drawn these cards in a ' + spreadName + ' spread:\n\n' + cardsDesc + '\n\nPlease provide:\n1. For each card position, write a flowing 3-4 sentence interpretation (label with position name and card name)\n2. A "Overall Message" paragraph (4-5 sentences) synthesizing the whole spread into guidance\n\nFormat your response as JSON exactly like this (no markdown fences):\n{\n  "cards": [\n    {"position": "Past", "name": "The Fool", "reading": "..."},\n    ...\n  ],\n  "overall": "..."\n}';
+function handleApiSuccess(data, fallbackFn) {
+  var rawContent = (data && data.content) ? data.content : [];
+  var text = rawContent.map(function(b){ return b.text || ''; }).join('') || '';
+  var clean = text.replace(/```json|```/g, '').trim();
+  var parsed = null;
+  try {
+    parsed = JSON.parse(clean);
+    dlog('JSON parsed OK — ' + (parsed.cards ? parsed.cards.length : 0) + ' card(s)', 'ok');
+  } catch(pe) {
+    dlog('JSON parse failed: ' + pe.message + ' | raw: ' + clean.substring(0, 120), 'warn');
+  }
+  loadingIndicator.classList.remove('show');
+  if (parsed && parsed.cards) {
+    renderReading(parsed);
+  } else {
+    dlog('API response unparseable — using built-in readings', 'warn');
+    renderReading(fallbackFn());
+  }
+}
 
-  // Always attempt the API — it works when Claude chat provides fetch permissions,
-  // and falls back gracefully on CORS/network failure (e.g. GitHub Pages)
-  dlog('Attempting API call from: ' + location.hostname, 'info');
+// ══════════════════════════════════════════════════════════
+// AI READING — Anthropic first, Gemini fallback
+// ══════════════════════════════════════════════════════════
+function fetchReading() {
+  dlog('Fetching AI reading... (alt=' + altMode + ')', 'info');
+  dlog('Origin: ' + location.origin, 'info');
+  readingPanel.classList.add('visible');
+  loadingIndicator.classList.add('show');
+  cardsReading.innerHTML = '';
+  overallBlock.style.display = 'none';
 
+  var prompt = buildPrompt(altMode);
+  var fallbackFn = function() { return generateFallbackReading(); };
+
+  dlog('Attempting Anthropic API...', 'info');
   fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1953,101 +2029,102 @@ function fetchReading() {
       messages: [{ role: 'user', content: prompt }]
     })
   })
-  .then(function(response) {
-    if (!response.ok) {
-      dlog('API HTTP error: ' + response.status + ' ' + response.statusText, 'error');
-      throw new Error('HTTP ' + response.status + ' ' + response.statusText);
-    }
-    return response.json();
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
+    return r.json();
   })
   .then(function(data) {
-    dlog('API response received. Type: ' + (data && data.type) + ' | Content blocks: ' + (data && data.content ? data.content.length : 0), 'ok');
-    if (data && data.error) {
-      dlog('API error body: ' + JSON.stringify(data.error), 'error');
-      throw new Error(data.error.message || 'API error');
-    }
-    var rawContent = (data && data.content) ? data.content : [];
-    var text = rawContent.map(function(b){ return b.text || ''; }).join('') || '';
-    var clean = text.replace(/```json|```/g, '').trim();
-    var parsed = null;
-    try {
-      parsed = JSON.parse(clean);
-      dlog('JSON parsed OK — ' + (parsed.cards ? parsed.cards.length : 0) + ' card(s)', 'ok');
-    } catch(pe) {
-      dlog('JSON parse failed: ' + pe.message + ' | raw preview: ' + clean.substring(0, 120), 'warn');
-    }
-    loadingIndicator.classList.remove('show');
-    if (parsed && parsed.cards) {
-      renderReading(parsed);
-    } else {
-      dlog('Falling back to built-in readings (empty/unparseable API response)', 'warn');
-      renderReading(generateFallbackReading());
-    }
+    if (data && data.error) throw new Error(data.error.message || 'API error');
+    dlog('Anthropic OK', 'ok');
+    handleApiSuccess(data, fallbackFn);
   })
   .catch(function(err) {
     var isCors = err.message === 'Load failed' || err.message === 'Failed to fetch' || err.message.indexOf('NetworkError') !== -1;
-    dlog('API fetch error: ' + err.message + (isCors ? ' (likely CORS block — API not accessible from ' + location.hostname + ')' : '') + (err.stack ? ' | ' + err.stack.split('\n')[0] : ''), 'error');
-    loadingIndicator.classList.remove('show');
-    dlog('Using built-in oracle readings instead', 'warn');
-    renderReading(generateFallbackReading());
+    dlog('Anthropic failed: ' + err.message + (isCors ? ' (CORS — trying Gemini)' : ''), isCors ? 'warn' : 'error');
+    fetchGemini(prompt, fallbackFn);
   });
 }
 
+function fetchGemini(prompt, fallbackFn) {
+  dlog('Attempting Gemini API...', 'info');
+  var key = _gk();
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.85, maxOutputTokens: 1200 }
+    })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('Gemini HTTP ' + r.status + ' ' + r.statusText);
+    return r.json();
+  })
+  .then(function(data) {
+    if (data && data.error) throw new Error('Gemini: ' + (data.error.message || 'API error'));
+    var text = '';
+    try {
+      text = data.candidates[0].content.parts[0].text || '';
+    } catch(e) {
+      throw new Error('Gemini response parse: ' + e.message);
+    }
+    dlog('Gemini OK — ' + text.length + ' chars', 'ok');
+    // Wrap in fake Anthropic structure for handleApiSuccess
+    var fakeData = { content: [{ text: text }] };
+    handleApiSuccess(fakeData, fallbackFn);
+  })
+  .catch(function(err) {
+    dlog('Gemini failed: ' + err.message + ' — using built-in readings', 'error');
+    loadingIndicator.classList.remove('show');
+    renderReading(fallbackFn());
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// FALLBACK READINGS (from external JS files)
+// ══════════════════════════════════════════════════════════
 function generateFallbackReading() {
-  var labels = SPREAD_LABELS[currentSpread];
-  var baseReadings = {
-    'The Fool': 'A new chapter beckons with open arms. The universe invites you to leap without overthinking, trusting that the path will reveal itself beneath your feet. Release your attachment to outcomes and embrace the magic of pure potential. This moment calls for courage, playfulness, and an open heart.',
-    'The Magician': 'All the tools you need are already in your hands. This is a time of tremendous personal power — your will, your words, your attention can shape reality itself. Channel your focus with intention and watch as the world responds to your clarity. You are the architect of your own transformation.',
-    'The High Priestess': 'The answers you seek lie not in the outer world but in the silent depths within. Trust the whispers of your intuition above the noise of logic and external opinion. A deeper truth is making itself known, available only to those who pause, listen, and look inward. Honor what you know beyond words.',
-    'The Empress': 'You are invited into a season of abundance, creativity, and natural flourishing. Let yourself receive the nourishment you have earned — both material and emotional. Your capacity to nurture others is a gift, but remember to first tend the garden of your own heart. Growth happens in conditions of love.',
-    'The Emperor': 'Structure, discipline, and clear boundaries are your allies now. This is a time to build with intention, to lead from a place of grounded authority, and to honor the responsibilities you carry. Stability does not come from controlling others but from the firm ground you create within yourself.',
-    'The Hierophant': 'Ancient wisdom calls to you — through tradition, mentorship, or a return to principles that have stood the test of time. You may find guidance within established frameworks, or you may be called to share your own wisdom with others. There is power in ceremony, in belonging, in the rites that connect us.',
-    'The Lovers': 'A significant choice stands before you, and with it comes the opportunity for deep alignment with your truest values. Whether in matters of the heart or in paths of life, choose from love rather than fear. Connection — with another, with your purpose, with yourself — is the heart of this moment.',
-    'The Chariot': 'Victory is within reach when you harness opposing forces and drive them forward with unified will. The obstacles before you are not walls but questions: how badly do you want this? Assert yourself with discipline and determination. The path forward requires you to take the reins.',
-    'Strength': 'True power wears the face of compassion. What you might tame by force, you can transform with patience and gentle presence. Your courage right now is not the roar but the quiet certainty that you can face whatever comes. Let love be the strength that opens what force would close.',
-    'The Hermit': 'A period of sacred solitude calls you inward. The lantern you carry illuminates only the next step — and that is enough. Seek wisdom not from the crowd but from the still voice that speaks in silence. This withdrawal from the world is not retreat; it is preparation.',
-    'Wheel of Fortune': 'The great wheel turns, and with it comes change you did not plan and could not prevent. Accept the cycles of fortune with equanimity — what rises will fall, what falls will rise again. You are not the wheel; you are the awareness watching it turn. Remain centered as the world shifts around you.',
-    'Justice': 'Truth is the most powerful force in the universe, and right now it demands your honesty — with yourself most of all. The scales are balanced by your own hand: every choice carries consequence, every cause its effect. Act from integrity, and what returns to you will be worthy of who you are.',
-    'The Hanged Man': 'Surrender is not defeat; it is the highest form of trust. By releasing your grip on how things should go, you open yourself to seeing from an entirely new angle. This pause, this waiting, this turning of the world upside down — it is preparation for a profound shift in understanding.',
-    'Death': 'Something must end so something greater can begin. Do not cling to what the current is carrying away — it has served its purpose, and the space it leaves is sacred. Transformation is rarely comfortable, but it is always purposeful. You are being remade, even now.',
-    'Temperance': 'The art of this moment is balance — not the sterile balance of avoidance, but the dynamic flow of integration. Mix patience with action, vision with practicality, silence with expression. The angel pours between vessels without spilling a drop: you too can hold many truths at once.',
-    'The Devil': 'What chains you is not as immovable as it seems. Examine the bonds you believe are inescapable — you may find they are far looser than you thought. Shadow work calls: look honestly at the patterns, cravings, and fears that have kept you cycling in the same place. Freedom begins with unflinching self-knowledge.',
-    'The Tower': 'What is falling was never truly stable. The lightning of truth strikes at structures built on false foundations, and though the collapse is frightening, it clears the ground for something real. This disruption is not punishment — it is liberation. Let what must fall, fall.',
-    'The Star': 'After the storm comes the star-lit sky, and with it — hope. You are being called back to your deepest self, to the quiet certainty that life is moving toward something beautiful. Trust the inspiration that rises within you. Your wishes, whispered to the cosmos, are heard.',
-    'The Moon': 'You are moving through the mysterious territory between what is real and what is imagined. Fear and intuition look alike in the dark — so proceed slowly, trust your instincts, and do not var anxiety paint illusions on the wall. The path through uncertainty is made by walking it.',
-    'The Sun': 'Joy is not a reward you must earn — it is your birthright. This is a time of illumination, of seeing clearly, of feeling the warmth of life in full radiance. Whatever you create now carries the light of genuine vitality. Let yourself be happy, wholeheartedly and without apology.',
-    'Judgement': 'A call is ringing out across your life — a summons to rise, to be seen, to answer at last for who you truly are. This is a moment of reckoning not with guilt, but with destiny. Let go of the past self who no longer serves you and step forward, reborn.',
-    'The World': 'You have arrived. Not at an end, but at a completion — a moment of wholeness, integration, and earned celebration. The work of this cycle is done, and the world opens its arms to you. Take a breath and honor how far you have come before the next great spiral begins.'
-  };
+  var readings = altMode
+    ? (window.TAROT_READINGS_ALT || window.TAROT_READINGS_STD)
+    : (window.TAROT_READINGS_STD || {});
+  var buildOverall = altMode
+    ? (window.buildOverallALT || window.buildOverallSTD)
+    : (window.buildOverallSTD || null);
 
   var labels = SPREAD_LABELS[currentSpread];
-  return {
-    cards: drawnCards.map((c, i) => ({
-      position: labels[i],
-      name: c.name + (c.reversed ? ' (Reversed)' : ''),
-      reading: c.reversed
-        ? `The energy of ${c.name} is present but turned inward, or perhaps blocked. ` + baseReadings[c.name]
-        : baseReadings[c.name] || `The ${c.name} speaks of ${c.keywords.join(', ')}.`
-    })),
-    overall: `This spread reveals a journey of ${drawnCards.map(c=>c.name).join(', ')}. The cards speak together of transformation, awareness, and the unfolding of your unique path. Honor each card's message as a facet of the whole — together they illuminate the terrain of your present moment with remarkable clarity and compassion. Trust the wisdom that has come to you today.`
-  };
+  var cards = drawnCards.map(function(c, i) {
+    var entry = readings[c.name] || {};
+    var text = c.reversed ? (entry.reversed || entry.upright || '') : (entry.upright || '');
+    if (!text) text = 'The ' + c.name + ' speaks of ' + (c.keywords ? c.keywords.join(', ') : 'mystery') + '.';
+    if (c.reversed && !entry.reversed) text = 'The energy of ' + c.name + ' is present but turned inward. ' + text;
+    return { position: labels[i], name: c.name + (c.reversed ? ' (Reversed)' : ''), reading: text };
+  });
+
+  var overall = buildOverall
+    ? buildOverall(drawnCards, labels, altMode)
+    : 'The cards speak together of transformation, awareness, and the unfolding of your unique path. Trust the wisdom that has come to you today.';
+
+  dlog('Fallback readings used (' + (altMode ? 'alt' : 'standard') + ')', 'info');
+  return { cards: cards, overall: overall };
 }
 
 function renderReading(parsed) {
   cardsReading.innerHTML = '';
-  for (var ri = 0; ri < parsed.cards.length; ri++) { (function(c, i) {
-    var card = drawnCards[i];
-    var block = document.createElement('div');
-    block.className = 'card-reading-block';
-    block.innerHTML = `
-      <span class="reading-position">✦ ${c.position}</span>
-      <div class="reading-card-name">${c.name}</div>
-      <div class="reading-keywords">
-        ${(card&&card.keywords?card.keywords:[]).map(function(k){return '<span class="kw-tag">'+k+'</span>';}).join('')}
-      </div>
-      <p class="reading-text">${c.reading}</p>`;
-    cardsReading.appendChild(block);
-  })(parsed.cards[ri], ri); }
+  for (var ri = 0; ri < parsed.cards.length; ri++) {
+    (function(c, i) {
+      var card = drawnCards[i];
+      var block = document.createElement('div');
+      block.className = 'card-reading-block';
+      var kws = (card && card.keywords) ? card.keywords : [];
+      var kwHtml = kws.map(function(k){ return '<span class="kw-tag">'+k+'</span>'; }).join('');
+      block.innerHTML = '<span class="reading-position">&#10022; ' + (c.position||'') + '</span>'
+        + '<div class="reading-card-name">' + (c.name||'') + '</div>'
+        + '<div class="reading-keywords">' + kwHtml + '</div>'
+        + '<p class="reading-text">' + (c.reading||'') + '</p>';
+      cardsReading.appendChild(block);
+    })(parsed.cards[ri], ri);
+  }
   if (parsed.overall) {
     overallText.textContent = parsed.overall;
     overallBlock.style.display = 'block';
