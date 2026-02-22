@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarot Oracle</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+/* ── DEFAULT: DUSK (softer, easier on eyes) ── */
+:root {
+  --ink: #1a1520;
+  --parchment: #f2e8d0;
+  --gold: #b8963e;
+  --gold-bright: #d4a94a;
+  --gold-dim: #6a5525;
+  --crimson: #8b1a2a;
+  --midnight: #1e1828;
+  --deep-violet: #2a1f3d;
+  --violet-mid: #3d2a60;
+  --amethyst: #7a55b0;
+  --silver: #9098b0;
+  --cream: #d8cdb0;
+  --card-dark: #1c1428;
+  --bg-primary: #1e1828;
+  --bg-card: #241c38;
+  --text-body: #c8bda0;
+  --border-subtle: rgba(184,150,62,0.2);
+}
+
+/* ── THEME: MIDNIGHT (original dark) ── */
+[data-theme="midnight"] {
+  --midnight: #0d0a1a;
+  --deep-violet: #1a0d30;
+  --violet-mid: #2e1458;
+  --amethyst: #6b3fa0;
+  --silver: #a8afc0;
+  --cream: #ede0c0;
+  --card-dark: #100820;
+  --bg-primary: #0d0a1a;
+  --bg-card: #120820;
+  --text-body: #ddd0b8;
+  --border-subtle: rgba(200,168,75,0.25);
+  --gold: #c8a84b;
+  --gold-bright: #e8c96a;
+  --gold-dim: #7a6428;
+}
+
+/* ── THEME: PARCHMENT (light warm) ── */
+[data-theme="parchment"] {
+  --midnight: #f5ede0;
+  --deep-violet: #e8dcc8;
+  --violet-mid: #ddd0b8;
+  --amethyst: #7a5535;
+  --silver: #6a5545;
+  --cream: #3a2a18;
+  --card-dark: #e8dcc8;
+  --bg-primary: #f5ede0;
+  --bg-card: #ede0c8;
+  --text-body: #3a2a18;
+  --border-subtle: rgba(100,70,30,0.25);
+  --gold: #8a6020;
+  --gold-bright: #a07830;
+  --gold-dim: #c0a870;
+}
+
+/* ── THEME: FOREST (deep green) ── */
+[data-theme="forest"] {
+  --midnight: #0e1a14;
+  --deep-violet: #162210;
+  --violet-mid: #1e3018;
+  --amethyst: #4a8050;
+  --silver: #90a898;
+  --cream: #d0e0c8;
+  --card-dark: #121e14;
+  --bg-primary: #0e1a14;
+  --bg-card: #162210;
+  --text-body: #c0d8b8;
+  --border-subtle: rgba(100,180,80,0.2);
+  --gold: #90b840;
+  --gold-bright: #a8d050;
+  --gold-dim: #507025;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-primary, var(--midnight));
+  color: var(--cream);
+  font-family: 'Cormorant Garamond', serif;
+  overflow-x: hidden;
+}
+
+/* ── CANVAS BG ── */
+#bg-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── LAYOUT ── */
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── HEADER ── */
+header {
+  width: 100%;
+  text-align: center;
+  padding: 44px 20px 20px;
+}
+
+.crown {
+  font-size: 2rem;
+  letter-spacing: 0.5em;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 8px;
+  animation: glowPulse 4s ease-in-out infinite;
+  text-shadow: 0 0 20px rgba(200,168,75,0.6);
+}
+
+@keyframes glowPulse {
+  0%,100% { text-shadow: 0 0 20px rgba(200,168,75,0.4); }
+  50% { text-shadow: 0 0 40px rgba(232,201,106,0.8), 0 0 60px rgba(200,168,75,0.3); }
+}
+
+h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.6rem, 5vw, 3rem);
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-shadow: 0 0 40px rgba(200,168,75,0.4);
+}
+
+.tagline {
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.4em;
+  color: var(--silver);
+  text-transform: uppercase;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 500px;
+  margin: 20px auto 0;
+}
+.rule-line { flex:1; height:1px; background: linear-gradient(90deg, transparent, var(--gold-dim), transparent); }
+.rule-gem { width:6px; height:6px; background: var(--gold); transform: rotate(45deg); }
+
+/* ── SPREAD SELECTOR ── */
+.spread-selector {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 28px 20px 16px;
+  flex-wrap: wrap;
+}
+
+.spread-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border: 1px solid var(--gold-dim);
+  background: rgba(14,8,28,0.6);
+  color: var(--silver);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.spread-btn:hover, .spread-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(200,168,75,0.08);
+  box-shadow: 0 0 20px rgba(200,168,75,0.15);
+}
+
+/* ── CARD STAGE ── */
+.card-stage {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(12px, 3vw, 32px);
+  padding: 20px clamp(12px, 4vw, 40px) 10px;
+  flex-wrap: wrap;
+  min-height: 380px;
+}
+
+.card-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.slot-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
+}
+
+/* ── TAROT CARD ── */
+.tarot-card {
+  width: clamp(120px, 18vw, 170px);
+  height: clamp(210px, 31vw, 295px);
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+  cursor: pointer;
+  position: relative;
+}
+
+.card-flipper {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-transition: -webkit-transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tarot-card.flipped .card-flipper { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
+
+.card-face, .card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Card Back */
+.card-back {
+  background: var(--card-dark);
+  border: 2px solid var(--gold-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-back svg { width:100%; height:100%; }
+
+/* Card Front */
+.card-face {
+  background: var(--card-dark);
+  border: 2px solid var(--gold);
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(200,168,75,0.2), inset 0 0 40px rgba(0,0,0,0.5);
+}
+.card-face.reversed svg {
+  transform: rotate(180deg);
+}
+
+.card-face svg { width:100%; height:100%; }
+
+/* Hover glow on unflipped cards */
+.tarot-card:not(.flipped):hover .card-back {
+  border-color: var(--gold);
+  box-shadow: 0 0 25px rgba(200,168,75,0.3), 0 8px 40px rgba(0,0,0,0.5);
+}
+
+.tarot-card:not(.flipped) {
+  animation: floatCard 3s ease-in-out infinite;
+}
+.tarot-card:nth-child(1) { animation-delay: 0s; }
+.tarot-card:nth-child(2) { animation-delay: 0.4s; }
+.tarot-card:nth-child(3) { animation-delay: 0.8s; }
+.tarot-card:nth-child(4) { animation-delay: 1.2s; }
+.tarot-card:nth-child(5) { animation-delay: 1.6s; }
+
+@keyframes floatCard {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.tarot-card.flipped { animation: none; }
+
+.card-hint {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--silver);
+  opacity: 0.5;
+  text-transform: uppercase;
+  margin-top: -4px;
+}
+
+/* ── DRAW BUTTON ── */
+.draw-section {
+  padding: 16px 20px 24px;
+  text-align: center;
+}
+
+.draw-btn {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 16px 48px;
+  border: 1px solid var(--gold);
+  background: linear-gradient(135deg, rgba(200,168,75,0.12), rgba(200,168,75,0.04));
+  color: var(--gold);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+
+.draw-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(200,168,75,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.draw-btn:hover::before { opacity: 1; }
+.draw-btn:hover {
+  box-shadow: 0 0 40px rgba(200,168,75,0.3), 0 4px 20px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+}
+
+.draw-btn:active { transform: translateY(0); }
+
+.draw-btn.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ── READING PANEL ── */
+.reading-panel {
+  width: 100%;
+  max-width: 900px;
+  padding: 0 20px 60px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+}
+
+.reading-panel.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.reading-divider {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 10px 0 32px;
+}
+.reading-divider-line { flex:1; height:1px; background: linear-gradient(90deg,transparent,var(--gold-dim),transparent); }
+.reading-divider-text {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Card reading blocks */
+.cards-reading {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.card-reading-block {
+  background: var(--bg-card, linear-gradient(145deg, rgba(26,13,48,0.85), rgba(16,8,32,0.9)));
+  border: 1px solid rgba(200,168,75,0.25);
+  border-radius: 8px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: border-color 0.3s;
+}
+
+.card-reading-block::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.card-reading-block:hover { border-color: rgba(200,168,75,0.5); }
+
+.reading-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 1.05rem;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.reading-position {
+  font-family: 'Cinzel', serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  color: var(--amethyst);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.reading-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.kw-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 0.62rem;
+  padding: 2px 10px;
+  border: 1px solid rgba(200,168,75,0.3);
+  border-radius: 20px;
+  color: var(--gold-bright);
+  background: rgba(200,168,75,0.06);
+}
+
+.reading-text {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: rgba(237,224,192,0.88);
+  font-style: italic;
+}
+
+/* Overall interpretation */
+.overall-block {
+  background: linear-gradient(135deg, rgba(46,20,88,0.4), rgba(26,13,48,0.6));
+  border: 1px solid rgba(200,168,75,0.35);
+  border-radius: 10px;
+  padding: 36px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.overall-block::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% -20%, rgba(107,63,160,0.15) 0%, transparent 70%);
+}
+
+.overall-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.overall-text {
+  font-size: 1.08rem;
+  line-height: 1.9;
+  color: var(--cream);
+  max-width: 680px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Loading state */
+.loading-indicator {
+  display: none;
+  text-align: center;
+  padding: 30px;
+}
+
+.loading-indicator.show { display: block; }
+
+.oracle-eye {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 16px;
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+  animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%,100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Reset button */
+.reset-btn {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  padding: 10px 28px;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  color: var(--silver);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.3s;
+  margin: 16px auto 0;
+}
+.reset-btn:hover { border-color: var(--gold); color: var(--gold); }
+.draw-section { padding: 8px 20px 20px; text-align: center; }
+.reset-btn.show { display: inline-block; }
+
+/* Card name on front */
+.card-label-front {
+  position: absolute;
+  bottom: 0; left:0; right:0;
+  padding: 8px 4px;
+  text-align: center;
+  background: linear-gradient(0deg, rgba(0,0,0,0.8), transparent);
+  font-family: 'Cinzel', serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  text-transform: uppercase;
+  z-index: 10;
+}
+
+
+/* ── THEME SWITCHER ── */
+.theme-bar {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 0 20px 16px;
+  align-items: center;
+}
+.theme-bar-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--silver);
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-right: 4px;
+}
+.theme-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  position: relative;
+}
+.theme-dot:hover { transform: scale(1.2); }
+.theme-dot.active { border-color: var(--gold); }
+.theme-dot[data-t="dusk"]      { background: radial-gradient(circle, #2e2448, #1e1828); }
+.theme-dot[data-t="midnight"]  { background: radial-gradient(circle, #2e1458, #0d0a1a); }
+.theme-dot[data-t="parchment"] { background: radial-gradient(circle, #e8dcc8, #f5ede0); }
+.theme-dot[data-t="forest"]    { background: radial-gradient(circle, #1e3018, #0e1a14); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--midnight); }
+::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
+
+/* entry animation */
+@keyframes cardEntrance {
+  from { opacity:0; transform: translateY(40px) scale(0.9); }
+  to { opacity:1; transform: translateY(0) scale(1); }
+}
+
+.tarot-card { animation: cardEntrance 0.5s ease both, floatCard 3s ease-in-out 0.5s infinite; }
+.tarot-card.flipped { animation: none; }
+
+/* ── DEBUG CONSOLE ── */
+#debug-toggle {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 9999;
+  background: rgba(10,6,20,0.9);
+  border: 1px solid #c9a84c;
+  color: #c9a84c;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+#debug-panel {
+  display: none;
+  position: fixed;
+  bottom: 50px;
+  right: 12px;
+  left: 12px;
+  max-height: 45vh;
+  background: rgba(5,3,12,0.97);
+  border: 1px solid #c9a84c;
+  border-radius: 6px;
+  z-index: 9998;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+}
+#debug-panel.open { display: block; }
+#debug-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(201,168,76,0.3);
+  position: sticky;
+  top: 0;
+  background: rgba(5,3,12,0.99);
+}
+#debug-toolbar span { color: #c9a84c; font-size: 10px; letter-spacing: 0.1em; }
+#debug-clear { background: none; border: 1px solid #555; color: #aaa; font-size: 10px; padding: 2px 8px; border-radius: 3px; cursor: pointer; }
+#debug-log {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dlog { color: #b0c8b0; word-break: break-all; line-height: 1.5; }
+.dlog.error { color: #ff6060; }
+.dlog.warn  { color: #ffcc44; }
+.dlog.info  { color: #60b0ff; }
+.dlog.ok    { color: #60dd88; }
+.dlog .ts   { color: #555; margin-right: 6px; }
+#debug-badge {
+  display: none;
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  background: #c00;
+  color: #fff;
+  font-size: 9px;
+  font-family: monospace;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* Parchment theme overrides for readability */
+[data-theme="parchment"] .slot-label,
+[data-theme="parchment"] .reading-divider-text,
+[data-theme="parchment"] .spread-btn { color: var(--silver); }
+[data-theme="parchment"] body { background: var(--midnight); color: var(--cream); }
+[data-theme="parchment"] .card-reading-block { background: rgba(210,195,170,0.85); }
+[data-theme="parchment"] .reading-text { color: #3a2a18; }
+[data-theme="parchment"] .overall-block { background: rgba(200,180,150,0.5); }
+[data-theme="parchment"] #bg-canvas { opacity: 0.3; }
+
+[data-theme="forest"] #bg-canvas { filter: hue-rotate(120deg); }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="app">
+  <header>
+    <span class="crown">☽ ✦ ☾</span>
+    <h1>Tarot Oracle</h1>
+    <p class="tagline">Draw your cards · Receive your reading</p>
+    <div class="rule">
+      <div class="rule-line"></div>
+      <div class="rule-gem"></div>
+      <div class="rule-line"></div>
+    </div>
+  </header>
+
+  <div class="spread-selector">
+    <button class="spread-btn active" data-spread="1">Single Card</button>
+    <button class="spread-btn" data-spread="3">Past · Present · Future</button>
+    <button class="spread-btn" data-spread="5">Celtic Cross (5)</button>
+  </div>
+
+  <p style="text-align:center;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--silver);opacity:0.55;padding:0 20px 8px;text-transform:uppercase;">Tap a card · Space or Enter for next</p>
+  <div class="theme-bar">
+    <span class="theme-bar-label">Theme</span>
+    <span class="theme-dot active" data-t="dusk"     title="Dusk"></span>
+    <span class="theme-dot"        data-t="midnight"  title="Midnight"></span>
+    <span class="theme-dot"        data-t="parchment" title="Parchment"></span>
+    <span class="theme-dot"        data-t="forest"    title="Forest"></span>
+  </div>
+
+  <div class="card-stage" id="cardStage"></div>
+
+  <div class="draw-section">
+    <button class="reset-btn" id="resetBtn">↺ New Reading</button>
+  </div>
+
+  <div class="reading-panel" id="readingPanel">
+    <div class="reading-divider">
+      <div class="reading-divider-line"></div>
+      <span class="reading-divider-text">The Oracle Speaks</span>
+      <div class="reading-divider-line"></div>
+    </div>
+
+    <div class="loading-indicator" id="loadingIndicator">
+      <svg class="oracle-eye" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="22" fill="none" stroke="rgba(200,168,75,0.2)" stroke-width="1"/>
+        <circle cx="25" cy="25" r="18" fill="none" stroke="rgba(200,168,75,0.4)" stroke-width="0.5" stroke-dasharray="4 4"/>
+        <circle cx="25" cy="25" r="10" fill="none" stroke="#c8a84b" stroke-width="1" stroke-dasharray="6 3"/>
+        <ellipse cx="25" cy="25" rx="5" ry="8" fill="rgba(200,168,75,0.15)" stroke="#c8a84b" stroke-width="0.8"/>
+        <circle cx="25" cy="25" r="3" fill="#c8a84b" opacity="0.8"/>
+      </svg>
+      <div class="loading-text">The oracle contemplates...</div>
+    </div>
+
+    <div class="cards-reading" id="cardsReading"></div>
+
+    <div class="overall-block" id="overallBlock" style="display:none">
+      <div class="overall-title">☽ ✦ The Complete Vision ✦ ☾</div>
+      <div class="overall-text" id="overallText"></div>
+    </div>
+  </div>
+
+  <!-- DEBUG CONSOLE -->
+  <button id="debug-toggle" onclick="toggleDebug()">🔍 Debug</button>
+  <span id="debug-badge"></span>
+  <div id="debug-panel">
+    <div id="debug-toolbar">
+      <span>IN-APP CONSOLE</span>
+      <button id="debug-clear" onclick="clearDebug()">CLEAR</button>
+    </div>
+    <div id="debug-log"></div>
+  </div>
+</div>
+
+<script>
+
+// ── IN-APP DEBUG CONSOLE ──
+var _errorCount = 0;
+var _debugOpen = false;
+
+function dlog(msg, type) {
+  type = type || 'log';
+  var panel = document.getElementById('debug-log');
+  if (!panel) return;
+  var d = document.createElement('div');
+  d.className = 'dlog ' + (type === 'error' ? 'error' : type === 'warn' ? 'warn' : type === 'info' ? 'info' : type === 'ok' ? 'ok' : '');
+  var now = new Date();
+  var ts = ('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2)+':'+('0'+now.getSeconds()).slice(-2);
+  d.innerHTML = '<span class="ts">['+ts+']</span>' + String(msg).replace(/</g,'&lt;');
+  panel.appendChild(d);
+  panel.scrollTop = panel.scrollHeight;
+  if (type === 'error') {
+    _errorCount++;
+    var badge = document.getElementById('debug-badge');
+    if (badge) { badge.textContent = _errorCount; badge.style.display = 'block'; }
+  }
+}
+
+function toggleDebug() {
+  _debugOpen = !_debugOpen;
+  var panel = document.getElementById('debug-panel');
+  var badge = document.getElementById('debug-badge');
+  if (panel) panel.className = _debugOpen ? 'open' : '';
+  if (badge && _debugOpen) badge.style.display = 'none';
+}
+
+function clearDebug() {
+  var panel = document.getElementById('debug-log');
+  if (panel) panel.innerHTML = '';
+  _errorCount = 0;
+  var badge = document.getElementById('debug-badge');
+  if (badge) badge.style.display = 'none';
+}
+
+// Intercept console and window errors
+(function() {
+  var _origError = console.error.bind(console);
+  var _origWarn  = console.warn.bind(console);
+  var _origLog   = console.log.bind(console);
+  console.error = function() { _origError.apply(console,arguments); dlog(Array.from(arguments).join(' '),'error'); };
+  console.warn  = function() { _origWarn.apply(console,arguments);  dlog(Array.from(arguments).join(' '),'warn'); };
+  console.log   = function() { _origLog.apply(console,arguments);   dlog(Array.from(arguments).join(' '),'log'); };
+  window.addEventListener('error', function(e) {
+    var detail = 'UNCAUGHT: ' + e.message
+      + ' | file: ' + (e.filename ? e.filename.split('/').pop() : '?')
+      + ' | line: ' + e.lineno + ':' + e.colno
+      + (e.error && e.error.stack ? ' | stack: ' + e.error.stack.split('\n').slice(0,2).join(' ') : '');
+    dlog(detail, 'error');
+  });
+  window.addEventListener('unhandledrejection', function(e) {
+    var msg = e.reason ? (e.reason.message || String(e.reason)) : 'unknown rejection';
+    var stack = e.reason && e.reason.stack ? ' | ' + e.reason.stack.split('\n').slice(0,2).join(' ') : '';
+    dlog('PROMISE REJECTED: ' + msg + stack, 'error');
+  });
+})();
+
+var APP_VERSION = 'v2-11';
+console.log('Tarot Oracle ' + APP_VERSION);
+dlog('Version: ' + APP_VERSION, 'info');
+dlog('Host: ' + location.hostname + location.pathname, 'info');
+dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
+
+// ══════════════════════════════════════════════════════════
+// STARFIELD BACKGROUND
+// ══════════════════════════════════════════════════════════
+(function() {
+  var canvas = document.getElementById('bg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H, stars = [], nebulas = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function initStars() {
+    stars = [];
+    for (var i = 0; i < 180; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.2,
+        alpha: Math.random() * 0.7 + 0.2,
+        speed: Math.random() * 0.003 + 0.001,
+        phase: Math.random() * Math.PI * 2,
+        gold: Math.random() < 0.15
+      });
+    }
+    nebulas = [
+      { x: W * 0.2, y: H * 0.3, r: 200, color: '107,63,160' },
+      { x: W * 0.8, y: H * 0.6, r: 180, color: '45,20,88' },
+      { x: W * 0.5, y: H * 0.8, r: 250, color: '30,10,60' },
+    ];
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    // Nebulas
+    nebulas.forEach(n => {
+      var g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+      g.addColorStop(0, `rgba(${n.color},0.08)`);
+      g.addColorStop(1, `rgba(${n.color},0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Stars
+    stars.forEach(s => {
+      var a = s.alpha * (0.6 + 0.4 * Math.sin(t * s.speed * 1000 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.gold
+        ? `rgba(200,168,75,${a})`
+        : `rgba(200,210,240,${a})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => { resize(); initStars(); });
+  resize();
+  initStars();
+  requestAnimationFrame(draw);
+})();
+
+// ══════════════════════════════════════════════════════════
+// TAROT DATA — All 22 Major Arcana
+// ══════════════════════════════════════════════════════════
+var MAJOR_ARCANA = [
+  {
+    num: 0, roman: '0', name: 'The Fool', keywords: ['New beginnings','Spontaneity','Free spirit','Innocence'],
+    reversed: false,
+    draw: (w,h) => drawFool(w,h)
+  },
+  {
+    num: 1, roman: 'I', name: 'The Magician', keywords: ['Willpower','Skill','Manifestation','Action'],
+    draw: (w,h) => drawMagician(w,h)
+  },
+  {
+    num: 2, roman: 'II', name: 'The High Priestess', keywords: ['Intuition','Mystery','Inner knowledge','Subconscious'],
+    draw: (w,h) => drawHighPriestess(w,h)
+  },
+  {
+    num: 3, roman: 'III', name: 'The Empress', keywords: ['Fertility','Abundance','Nature','Nurturing'],
+    draw: (w,h) => drawEmpress(w,h)
+  },
+  {
+    num: 4, roman: 'IV', name: 'The Emperor', keywords: ['Authority','Structure','Stability','Leadership'],
+    draw: (w,h) => drawEmperor(w,h)
+  },
+  {
+    num: 5, roman: 'V', name: 'The Hierophant', keywords: ['Tradition','Spiritual wisdom','Institutions','Guidance'],
+    draw: (w,h) => drawHierophant(w,h)
+  },
+  {
+    num: 6, roman: 'VI', name: 'The Lovers', keywords: ['Love','Harmony','Partnership','Choices'],
+    draw: (w,h) => drawLovers(w,h)
+  },
+  {
+    num: 7, roman: 'VII', name: 'The Chariot', keywords: ['Determination','Victory','Control','Willpower'],
+    draw: (w,h) => drawChariot(w,h)
+  },
+  {
+    num: 8, roman: 'VIII', name: 'Strength', keywords: ['Courage','Patience','Inner strength','Compassion'],
+    draw: (w,h) => drawStrength(w,h)
+  },
+  {
+    num: 9, roman: 'IX', name: 'The Hermit', keywords: ['Solitude','Introspection','Guidance','Wisdom'],
+    draw: (w,h) => drawHermit(w,h)
+  },
+  {
+    num: 10, roman: 'X', name: 'Wheel of Fortune', keywords: ['Cycles','Luck','Turning point','Destiny'],
+    draw: (w,h) => drawWheel(w,h)
+  },
+  {
+    num: 11, roman: 'XI', name: 'Justice', keywords: ['Balance','Truth','Fairness','Law'],
+    draw: (w,h) => drawJustice(w,h)
+  },
+  {
+    num: 12, roman: 'XII', name: 'The Hanged Man', keywords: ['Surrender','Pause','New perspective','Sacrifice'],
+    draw: (w,h) => drawHangedMan(w,h)
+  },
+  {
+    num: 13, roman: 'XIII', name: 'Death', keywords: ['Transformation','Endings','Transition','Change'],
+    draw: (w,h) => drawDeath(w,h)
+  },
+  {
+    num: 14, roman: 'XIV', name: 'Temperance', keywords: ['Balance','Moderation','Patience','Purpose'],
+    draw: (w,h) => drawTemperance(w,h)
+  },
+  {
+    num: 15, roman: 'XV', name: 'The Devil', keywords: ['Bondage','Materialism','Shadow self','Addiction'],
+    draw: (w,h) => drawDevil(w,h)
+  },
+  {
+    num: 16, roman: 'XVI', name: 'The Tower', keywords: ['Chaos','Revelation','Upheaval','Sudden change'],
+    draw: (w,h) => drawTower(w,h)
+  },
+  {
+    num: 17, roman: 'XVII', name: 'The Star', keywords: ['Hope','Inspiration','Renewal','Serenity'],
+    draw: (w,h) => drawStar(w,h)
+  },
+  {
+    num: 18, roman: 'XVIII', name: 'The Moon', keywords: ['Illusion','Fear','Subconscious','Dreams'],
+    draw: (w,h) => drawMoon(w,h)
+  },
+  {
+    num: 19, roman: 'XIX', name: 'The Sun', keywords: ['Joy','Success','Vitality','Clarity'],
+    draw: (w,h) => drawSun(w,h)
+  },
+  {
+    num: 20, roman: 'XX', name: 'Judgement', keywords: ['Reflection','Reckoning','Awakening','Absolution'],
+    draw: (w,h) => drawJudgement(w,h)
+  },
+  {
+    num: 21, roman: 'XXI', name: 'The World', keywords: ['Completion','Integration','Wholeness','Achievement'],
+    draw: (w,h) => drawWorld(w,h)
+  },
+];
+
+var SPREAD_LABELS = {
+  1: ['Your Card'],
+  3: ['Past', 'Present', 'Future'],
+  5: ['Present', 'Challenge', 'Past', 'Future', 'Potential'],
+};
+
+// ══════════════════════════════════════════════════════════
+// SVG CARD ARTWORK (inline SVG generators)
+// ══════════════════════════════════════════════════════════
+function svgBase(w,h,content,numText,nameText) {
+  var cx=w/2, cy=h/2, r8=w*0.08, r3=w*0.03;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg_${numText}" cx="50%" cy="35%">
+      <stop offset="0%" stop-color="#1a0a30"/>
+      <stop offset="100%" stop-color="#060310"/>
+    </radialGradient>
+  </defs>
+  <rect width="${w}" height="${h}" fill="url(#bg_${numText})"/>
+  ${content}
+  <!-- stars scatter -->
+  <circle cx="${w*0.12}" cy="${h*0.08}" r="0.9" fill="#fff" opacity="0.5"/>
+  <circle cx="${w*0.88}" cy="${h*0.06}" r="1.1" fill="#fff" opacity="0.7"/>
+  <circle cx="${w*0.75}" cy="${h*0.18}" r="0.8" fill="#c9a84c" opacity="0.6"/>
+  <circle cx="${w*0.22}" cy="${h*0.22}" r="0.7" fill="#fff" opacity="0.4"/>
+  <!-- inner border -->
+  <rect x="6" y="6" width="${w-12}" height="${h-12}" fill="none" stroke="rgba(200,168,75,0.25)" stroke-width="0.8" rx="6"/>
+  <!-- Roman numeral top -->
+  <text x="${w/2}" y="20" font-family="serif" font-size="${w*0.09}" fill="#c9a84c" text-anchor="middle" opacity="0.9">${numText}</text>
+  <!-- Card name bottom -->
+  <text x="${w/2}" y="${h-8}" font-family="serif" font-size="${w*0.07}" fill="#c9a84c" text-anchor="middle" opacity="0.7">${nameText.toUpperCase()}</text>
+</svg>`;
+}
+
+function drawFool(w,h) {
+  var c = `
+  <!-- cliff -->
+  <path d="M0 ${h*0.7} Q${w*0.4} ${h*0.6} ${w*0.55} ${h*0.65} L${w*0.6} ${h} L0 ${h}Z" fill="#0a1f0a" opacity="0.9"/>
+  <!-- sky -->
+  <circle cx="${w*0.7}" cy="${h*0.15}" r="${w*0.18}" fill="#fff8d0" opacity="0.25"/>
+  <!-- dog -->
+  <ellipse cx="${w*0.38}" cy="${h*0.66}" rx="${w*0.08}" ry="${w*0.06}" fill="#a08060" opacity="0.9"/>
+  <circle cx="${w*0.42}" cy="${h*0.62}" r="${w*0.04}" fill="#a08060"/>
+  <!-- figure -->
+  <ellipse cx="${w*0.55}" cy="${h*0.52}" rx="${w*0.06}" ry="${w*0.08}" fill="#f0c890"/>
+  <rect x="${w*0.49}" y="${h*0.59}" width="${w*0.12}" height="${h*0.08}" rx="3" fill="#c84040" opacity="0.9"/>
+  <!-- staff and bundle -->
+  <line x1="${w*0.65}" y1="${h*0.42}" x2="${w*0.58}" y2="${h*0.7}" stroke="#8a6820" stroke-width="2"/>
+  <circle cx="${w*0.66}" cy="${h*0.4}" r="${w*0.04}" fill="#8b4513"/>
+  <!-- flower -->
+  <circle cx="${w*0.46}" cy="${h*0.55}" r="${w*0.025}" fill="#ff80a0"/>
+  <line x1="${w*0.46}" y1="${h*0.57}" x2="${w*0.46}" y2="${h*0.63}" stroke="#408030" stroke-width="1.5"/>`;
+  return svgBase(w,h,c,'0','THE FOOL');
+}
+
+function drawMagician(w,h) {
+  var c = `
+  <!-- table -->
+  <rect x="${w*0.15}" y="${h*0.52}" width="${w*0.7}" height="${h*0.06}" rx="3" fill="#3a1a08" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- tools on table -->
+  <circle cx="${w*0.28}" cy="${h*0.5}" r="${w*0.04}" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+  <polygon points="${w*0.43},${h*0.47} ${w*0.46},${h*0.52} ${w*0.40},${h*0.52}" fill="#c9a84c"/>
+  <line x1="${w*0.58}" y1="${h*0.46}" x2="${w*0.58}" y2="${h*0.52}" stroke="#c9a84c" stroke-width="2"/>
+  <rect x="${w*0.68}" y="${h*0.47}" width="${w*0.07}" height="${h*0.05}" rx="2" fill="#a0c0ff" opacity="0.8"/>
+  <!-- figure -->
+  <ellipse cx="${w*0.5}" cy="${h*0.3}" rx="${w*0.09}" ry="${w*0.1}" fill="#f0c890"/>
+  <rect x="${w*0.42}" y="${h*0.39}" width="${w*0.16}" height="${h*0.12}" rx="3" fill="#c04040" opacity="0.9"/>
+  <!-- wand raised -->
+  <line x1="${w*0.5}" y1="${h*0.15}" x2="${w*0.5}" y2="${h*0.4}" stroke="#8a6820" stroke-width="2"/>
+  <line x1="${w*0.48}" y1="${h*0.15}" x2="${w*0.52}" y2="${h*0.15}" stroke="#c9a84c" stroke-width="2"/>
+  <!-- infinity above -->
+  <path d="M${w*0.38},${h*0.1} Q${w*0.42},${h*0.07} ${w*0.5},${h*0.1} Q${w*0.58},${h*0.13} ${w*0.62},${h*0.1} Q${w*0.58},${h*0.07} ${w*0.5},${h*0.1} Q${w*0.42},${h*0.13} ${w*0.38},${h*0.1}" fill="none" stroke="#c9a84c" stroke-width="1.2"/>
+  <!-- arm pointing down -->
+  <line x1="${w*0.42}" y1="${h*0.45}" x2="${w*0.3}" y2="${h*0.55}" stroke="#f0c890" stroke-width="3"/>`;
+  return svgBase(w,h,c,'I','THE MAGICIAN');
+}
+
+function drawHighPriestess(w,h) {
+  var c = `
+  <!-- pillars -->
+  <rect x="${w*0.1}" y="${h*0.25}" width="${w*0.15}" height="${h*0.5}" rx="3" fill="#180840" stroke="#c9a84c" stroke-width="0.8"/>
+  <rect x="${w*0.75}" y="${h*0.25}" width="${w*0.15}" height="${h*0.5}" rx="3" fill="#180840" stroke="#c9a84c" stroke-width="0.8"/>
+  <text x="${w*0.175}" y="${h*0.33}" font-family="serif" font-size="${w*0.1}" fill="#c9a84c" text-anchor="middle">B</text>
+  <text x="${w*0.825}" y="${h*0.33}" font-family="serif" font-size="${w*0.1}" fill="#c9a84c" text-anchor="middle">J</text>
+  <!-- moon crown -->
+  <ellipse cx="${w*0.5}" cy="${h*0.22}" rx="${w*0.14}" ry="${h*0.04}" fill="#c9a84c" opacity="0.85"/>
+  <path d="M${w*0.37},${h*0.22} Q${w*0.4},${h*0.17} ${w*0.45},${h*0.22}" fill="none" stroke="#c9a84c" stroke-width="1"/>
+  <path d="M${w*0.55},${h*0.22} Q${w*0.6},${h*0.17} ${w*0.63},${h*0.22}" fill="none" stroke="#c9a84c" stroke-width="1"/>
+  <!-- figure -->
+  <ellipse cx="${w*0.5}" cy="${h*0.37}" rx="${w*0.1}" ry="${w*0.11}" fill="#f0c890"/>
+  <ellipse cx="${w*0.79}" cy="${h*0.37}" rx="${w*0.012}" ry="${w*0.009}" fill="#2d1457"/><ellipse cx="${w*0.21}" cy="${h*0.37}" rx="${w*0.012}" ry="${w*0.009}" fill="#2d1457"/>
+  <ellipse cx="${w*0.46}" cy="${h*0.365}" rx="${w*0.025}" ry="${w*0.015}" fill="#fff"/>
+  <ellipse cx="${w*0.54}" cy="${h*0.365}" rx="${w*0.025}" ry="${w*0.015}" fill="#fff"/>
+  <circle cx="${w*0.46}" cy="${h*0.365}" r="${w*0.015}" fill="#2d1457"/>
+  <circle cx="${w*0.54}" cy="${h*0.365}" r="${w*0.015}" fill="#2d1457"/>
+  <path d="M${w*0.46},${h*0.39} Q${w*0.5},${h*0.41} ${w*0.54},${h*0.39}" fill="none" stroke="#c07070" stroke-width="1"/>
+  <rect x="${w*0.38}" y="${h*0.47}" width="${w*0.24}" height="${h*0.35}" rx="3" fill="#13094f"/>
+  <!-- scroll -->
+  <rect x="${w*0.41}" y="${h*0.47}" width="${w*0.18}" height="${h*0.24}" rx="2" fill="#e8d5a0" stroke="#8a6820" stroke-width="0.8"/>
+  <text x="${w*0.5}" y="${h*0.56}" font-family="serif" font-size="${w*0.07}" fill="#5a3810" text-anchor="middle">TORA</text>
+  <!-- veil behind -->
+  <path d="M${w*0.24},${h*0.7} Q${w*0.5},${h*0.65} ${w*0.76},${h*0.7} L${w*0.78},${h*0.92} Q${w*0.5},${h*0.86} ${w*0.22},${h*0.92}Z" fill="#0d0520" stroke="#c9a84c" stroke-width="0.5" opacity="0.7"/>`;
+  return svgBase(w,h,c,'II','HIGH PRIESTESS');
+}
+
+function drawEmpress(w,h) {
+  var c = `
+  <!-- nature bg -->
+  <rect x="0" y="${h*0.6}" width="${w}" height="${h*0.4}" fill="#0a1f0a" opacity="0.7"/>
+  <circle cx="${w*0.5}" cy="${h*0.15}" r="${w*0.2}" fill="#c9a84c" opacity="0.08"/>
+  <!-- wheat/nature -->
+  <line x1="${w*0.2}" y1="${h*0.7}" x2="${w*0.15}" y2="${h*0.55}" stroke="#6a9030" stroke-width="2"/>
+  <ellipse cx="${w*0.15}" cy="${h*0.53}" rx="${w*0.025}" ry="${h*0.04}" fill="#c8d860"/>
+  <line x1="${w*0.8}" y1="${h*0.7}" x2="${w*0.83}" y2="${h*0.55}" stroke="#6a9030" stroke-width="2"/>
+  <ellipse cx="${w*0.83}" cy="${h*0.53}" rx="${w*0.025}" ry="${h*0.04}" fill="#c8d860"/>
+  <!-- throne -->
+  <rect x="${w*0.25}" y="${h*0.45}" width="${w*0.5}" height="${h*0.3}" rx="5" fill="#2a1008" stroke="#c9a84c" stroke-width="0.8" opacity="0.9"/>
+  <!-- figure -->
+  <ellipse cx="${w*0.5}" cy="${h*0.33}" rx="${w*0.1}" ry="${w*0.11}" fill="#f0c890"/>
+  <ellipse cx="${w*0.5}" cy="${h*0.52}" rx="${w*0.18}" ry="${w*0.14}" fill="#d06080"/>
+  <!-- crown -->
+  <rect x="${w*0.38}" y="${h*0.22}" width="${w*0.24}" height="${h*0.04}" rx="2" fill="#c9a84c"/>
+  <line x1="${w*0.42}" y1="${h*0.22}" x2="${w*0.42}" y2="${h*0.17}" stroke="#c9a84c" stroke-width="2"/>
+  <line x1="${w*0.5}" y1="${h*0.22}" x2="${w*0.5}" y2="${h*0.15}" stroke="#c9a84c" stroke-width="2"/>
+  <line x1="${w*0.58}" y1="${h*0.22}" x2="${w*0.58}" y2="${h*0.17}" stroke="#c9a84c" stroke-width="2"/>
+  <circle cx="${w*0.42}" cy="${h*0.17}" r="${w*0.02}" fill="#c9a84c"/>
+  <circle cx="${w*0.5}" cy="${h*0.14}" r="${w*0.02}" fill="#c9a84c"/>
+  <circle cx="${w*0.58}" cy="${h*0.17}" r="${w*0.02}" fill="#c9a84c"/>
+  <!-- sceptre -->
+  <line x1="${w*0.65}" y1="${h*0.28}" x2="${w*0.72}" y2="${h*0.52}" stroke="#8a6820" stroke-width="2"/>
+  <circle cx="${w*0.65}" cy="${h*0.27}" r="${w*0.025}" fill="#c9a84c"/>
+  <!-- Venus symbol -->
+  <circle cx="${w*0.32}" cy="${h*0.5}" r="${w*0.04}" fill="none" stroke="#c9a84c" stroke-width="1"/>
+  <line x1="${w*0.32}" y1="${h*0.54}" x2="${w*0.32}" y2="${h*0.58}" stroke="#c9a84c" stroke-width="1"/>
+  <line x1="${w*0.3}" y1="${h*0.56}" x2="${w*0.34}" y2="${h*0.56}" stroke="#c9a84c" stroke-width="1"/>`;
+  return svgBase(w,h,c,'III','THE EMPRESS');
+}
+
+function drawEmperor(w,h) {
+  var c = `
+  <!-- mountains -->
+  <path d="M0,${h*0.65} L${w*0.25},${h*0.4} L${w*0.45},${h*0.6} L${w*0.65},${h*0.35} L${w},${h*0.6} L${w},${h} L0,${h}Z" fill="#2a1010" opacity="0.8"/>
+  <!-- throne -->
+  <rect x="${w*0.2}" y="${h*0.3}" width="${w*0.6}" height="${h*0.45}" rx="5" fill="#1a0808" stroke="#c9a84c" stroke-width="1" opacity="0.9"/>
+  <circle cx="${w*0.28}" cy="${h*0.28}" r="${w*0.05}" fill="#c9a84c" opacity="0.7"/>
+  <circle cx="${w*0.72}" cy="${h*0.28}" r="${w*0.05}" fill="#c9a84c" opacity="0.7"/>
+  <!-- figure robe -->
+  <ellipse cx="${w*0.5}" cy="${h*0.58}" rx="${w*0.2}" ry="${h*0.17}" fill="#8b1a2a" opacity="0.9"/>
+  <!-- figure body upper -->
+  <rect x="${w*0.4}" y="${h*0.38}" width="${w*0.2}" height="${h*0.2}" rx="3" fill="#a0a0b0"/>
+  <!-- head -->
+  <ellipse cx="${w*0.5}" cy="${h*0.32}" rx="${w*0.09}" ry="${w*0.1}" fill="#f0c890"/>
+  <!-- beard -->
+  <path d="M${w*0.43},${h*0.37} Q${w*0.5},${h*0.44} ${w*0.57},${h*0.37}" fill="#a08060" opacity="0.9"/>
+  <!-- crown -->
+  <rect x="${w*0.39}" y="${h*0.22}" width="${w*0.22}" height="${h*0.035}" rx="2" fill="#c9a84c"/>
+  <line x1="${w*0.43}" y1="${h*0.22}" x2="${w*0.41}" y2="${h*0.17}" stroke="#c9a84c" stroke-width="2"/>
+  <line x1="${w*0.5}" y1="${h*0.22}" x2="${w*0.5}" y2="${h*0.15}" stroke="#c9a84c" stroke-width="2.5"/>
+  <line x1="${w*0.57}" y1="${h*0.22}" x2="${w*0.59}" y2="${h*0.17}" stroke="#c9a84c" stroke-width="2"/>
+  <!-- orb and sceptre -->
+  <circle cx="${w*0.35}" cy="${h*0.47}" r="${w*0.04}" fill="#c9a84c" opacity="0.8"/>
+  <line x1="${w*0.65}" y1="${h*0.35}" x2="${w*0.68}" y2="${h*0.55}" stroke="#8a6820" stroke-width="3"/>
+  <!-- ankh top sceptre -->
+  <circle cx="${w*0.65}" cy="${h*0.33}" r="${w*0.025}" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+  <line x1="${w*0.62}" y1="${h*0.35}" x2="${w*0.68}" y2="${h*0.35}" stroke="#c9a84c" stroke-width="1.5"/>`;
+  return svgBase(w,h,c,'IV','THE EMPEROR');
+}
+
+function drawHierophant(w,h) {
+  var c = `
+  <!-- pillars -->
+  <rect x="${w*0.08}" y="${h*0.2}" width="${w*0.12}" height="${h*0.6}" rx="3" fill="#180840" stroke="#c9a84c" stroke-width="0.8"/>
+  <rect x="${w*0.8}" y="${h*0.2}" width="${w*0.12}" height="${h*0.6}" rx="3" fill="#180840" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- followers (small) -->
+  <circle cx="${w*0.35}" cy="${h*0.72}" r="${w*0.05}" fill="#f0c890"/>
+  <rect x="${w*0.3}" y="${h*0.77}" width="${w*0.1}" height="${h*0.1}" rx="2" fill="#806040"/>
+  <circle cx="${w*0.65}" cy="${h*0.72}" r="${w*0.05}" fill="#f0c890"/>
+  <rect x="${w*0.6}" y="${h*0.77}" width="${w*0.1}" height="${h*0.1}" rx="2" fill="#8060a0"/>
+  <!-- main figure -->
+  <ellipse cx="${w*0.5}" cy="${h*0.32}" rx="${w*0.1}" ry="${w*0.11}" fill="#f0c890"/>
+  <rect x="${w*0.38}" y="${h*0.42}" width="${w*0.24}" height="${h*0.28}" rx="3" fill="#600000" opacity="0.95"/>
+  <!-- triple crown -->
+  <rect x="${w*0.38}" y="${h*0.2}" width="${w*0.24}" height="${h*0.05}" rx="2" fill="#c9a84c"/>
+  <rect x="${w*0.4}" y="${h*0.16}" width="${w*0.2}" height="${h*0.04}" rx="2" fill="#c9a84c"/>
+  <rect x="${w*0.42}" y="${h*0.12}" width="${w*0.16}" height="${h*0.04}" rx="2" fill="#c9a84c"/>
+  <!-- triple cross sceptre -->
+  <line x1="${w*0.65}" y1="${h*0.2}" x2="${w*0.68}" y2="${h*0.65}" stroke="#c9a84c" stroke-width="2"/>
+  <line x1="${w*0.62}" y1="${h*0.3}" x2="${w*0.71}" y2="${h*0.3}" stroke="#c9a84c" stroke-width="1.5"/>
+  <line x1="${w*0.62}" y1="${h*0.36}" x2="${w*0.71}" y2="${h*0.36}" stroke="#c9a84c" stroke-width="1.5"/>
+  <!-- hand blessing -->
+  <line x1="${w*0.38}" y1="${h*0.48}" x2="${w*0.28}" y2="${h*0.42}" stroke="#f0c890" stroke-width="2.5"/>
+  <circle cx="${w*0.27}" cy="${h*0.41}" r="${w*0.03}" fill="#f0c890"/>
+  <!-- two keys -->
+  <circle cx="${w*0.38}" cy="${h*0.75}" r="${w*0.03}" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+  <line x1="${w*0.38}" y1="${h*0.78}" x2="${w*0.38}" y2="${h*0.84}" stroke="#c9a84c" stroke-width="1.5"/>
+  <circle cx="${w*0.62}" cy="${h*0.75}" r="${w*0.03}" fill="none" stroke="#d0d0d0" stroke-width="1.5"/>
+  <line x1="${w*0.62}" y1="${h*0.78}" x2="${w*0.62}" y2="${h*0.84}" stroke="#d0d0d0" stroke-width="1.5"/>`;
+  return svgBase(w,h,c,'V','THE HIEROPHANT');
+}
+
+function drawLovers(w,h) {
+  var c = `
+  <!-- sun/angel above -->
+  <circle cx="${w*0.5}" cy="${h*0.16}" r="${w*0.12}" fill="#ffcc00" opacity="0.25"/>
+  <!-- angel wings -->
+  <path d="M${w*0.3},${h*0.25} Q${w*0.2},${h*0.18} ${w*0.15},${h*0.28} Q${w*0.25},${h*0.3} ${w*0.38},${h*0.28}Z" fill="#e0e0ff" opacity="0.6"/>
+  <path d="M${w*0.7},${h*0.25} Q${w*0.8},${h*0.18} ${w*0.85},${h*0.28} Q${w*0.75},${h*0.3} ${w*0.62},${h*0.28}Z" fill="#e0e0ff" opacity="0.6"/>
+  <!-- angel body -->
+  <circle cx="${w*0.5}" cy="${h*0.22}" r="${w*0.07}" fill="#f0c890"/>
+  <!-- ground -->
+  <path d="M0,${h*0.72} L${w},${h*0.72} L${w},${h} L0,${h}Z" fill="#0a1f0a" opacity="0.7"/>
+  <!-- Tree of knowledge (right) -->
+  <line x1="${w*0.7}" y1="${h*0.72}" x2="${w*0.7}" y2="${h*0.45}" stroke="#3a1f08" stroke-width="3"/>
+  <circle cx="${w*0.7}" cy="${h*0.4}" r="${w*0.1}" fill="#a83820" opacity="0.7"/>
+  <!-- Tree of life (left) -->
+  <line x1="${w*0.3}" y1="${h*0.72}" x2="${w*0.3}" y2="${h*0.48}" stroke="#1f3a08" stroke-width="3"/>
+  <circle cx="${w*0.3}" cy="${h*0.42}" r="${w*0.1}" fill="#204020" opacity="0.7"/>
+  <!-- female figure -->
+  <circle cx="${w*0.35}" cy="${h*0.58}" r="${w*0.07}" fill="#f0c890"/>
+  <ellipse cx="${w*0.35}" cy="${h*0.68}" rx="${w*0.07}" ry="${h*0.08}" fill="#8060a0" opacity="0.8"/>
+  <!-- male figure -->
+  <circle cx="${w*0.65}" cy="${h*0.58}" r="${w*0.07}" fill="#f0c890"/>
+  <ellipse cx="${w*0.65}" cy="${h*0.68}" rx="${w*0.07}" ry="${h*0.08}" fill="#a06030" opacity="0.8"/>
+  <!-- ray from angel -->
+  <line x1="${w*0.5}" y1="${h*0.28}" x2="${w*0.35}" y2="${h*0.55}" stroke="#ffcc00" stroke-width="0.8" opacity="0.5"/>
+  <line x1="${w*0.5}" y1="${h*0.28}" x2="${w*0.65}" y2="${h*0.55}" stroke="#ffcc00" stroke-width="0.8" opacity="0.5"/>`;
+  return svgBase(w,h,c,'VI','THE LOVERS');
+}
+
+function drawChariot(w,h) {
+  var c = `
+  <!-- city bg -->
+  <rect x="${w*0.05}" y="${h*0.45}" width="${w*0.1}" height="${h*0.2}" fill="#201040" opacity="0.7"/>
+  <rect x="${w*0.2}" y="${h*0.4}" width="${w*0.12}" height="${h*0.25}" fill="#201040" opacity="0.7"/>
+  <rect x="${w*0.75}" y="${h*0.42}" width="${w*0.1}" height="${h*0.23}" fill="#201040" opacity="0.7"/>
+  <!-- chariot body -->
+  <rect x="${w*0.2}" y="${h*0.48}" width="${w*0.6}" height="${h*0.22}" rx="5" fill="#1a0840" stroke="#c9a84c" stroke-width="1.2" opacity="0.95"/>
+  <!-- canopy stars -->
+  <rect x="${w*0.22}" y="${h*0.42}" width="${w*0.56}" height="${h*0.07}" rx="2" fill="#0d0520" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- sphinxes -->
+  <ellipse cx="${w*0.3}" cy="${h*0.73}" rx="${w*0.09}" ry="${w*0.06}" fill="#e0d0a0"/>
+  <circle cx="${w*0.37}" cy="${h*0.7}" r="${w*0.04}" fill="#e0d0a0"/>
+  <ellipse cx="${w*0.7}" cy="${h*0.73}" rx="${w*0.09}" ry="${w*0.06}" fill="#1a1a1a"/>
+  <circle cx="${w*0.63}" cy="${h*0.7}" r="${w*0.04}" fill="#1a1a1a"/>
+  <!-- warrior -->
+  <ellipse cx="${w*0.5}" cy="${h*0.36}" rx="${w*0.09}" ry="${w*0.1}" fill="#f0c890"/>
+  <rect x="${w*0.41}" y="${h*0.45}" width="${w*0.18}" height="${h*0.06}" rx="2" fill="#a0a0b0"/>
+  <!-- crescent shoulders -->
+  <path d="M${w*0.4},${h*0.44} Q${w*0.38},${h*0.4} ${w*0.42},${h*0.42}" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+  <path d="M${w*0.6},${h*0.44} Q${w*0.62},${h*0.4} ${w*0.58},${h*0.42}" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+  <!-- wand -->
+  <line x1="${w*0.5}" y1="${h*0.22}" x2="${w*0.52}" y2="${h*0.46}" stroke="#8a6820" stroke-width="2"/>
+  <!-- star on canopy -->
+  <polygon points="${w*0.5},${h*0.43} ${w*0.52},${h*0.46} ${w*0.55},${h*0.44} ${w*0.53},${h*0.47} ${w*0.55},${h*0.5} ${w*0.5},${h*0.48} ${w*0.45},${h*0.5} ${w*0.47},${h*0.47} ${w*0.45},${h*0.44} ${w*0.48},${h*0.46}" fill="#c9a84c" opacity="0.6"/>`;
+  return svgBase(w,h,c,'VII','THE CHARIOT');
+}
+
+function drawStrength(w,h) {
+  var c = `
+  <!-- landscape -->
+  <path d="M0,${h*0.65} Q${w*0.3},${h*0.55} ${w*0.6},${h*0.6} Q${w*0.8},${h*0.65} ${w},${h*0.58} L${w},${h} L0,${h}Z" fill="#1a3010" opacity="0.7"/>
+  <!-- mountains far -->
+  <path d="M${w*0.6},${h*0.65} L${w*0.75},${h*0.45} L${w*0.9},${h*0.6}Z" fill="#2a1830" opacity="0.6"/>
+  <path d="M${w*0.7},${h*0.6} L${w*0.85},${h*0.4} L${w},${h*0.55}Z" fill="#2a1830" opacity="0.5"/>
+  <!-- lion -->
+  <ellipse cx="${w*0.45}" cy="${h*0.68}" rx="${w*0.22}" ry="${w*0.13}" fill="#c8a030"/>
+  <circle cx="${w*0.6}" cy="${h*0.62}" r="${w*0.1}" fill="#c8a030"/>
+  <!-- lion mane -->
+  <circle cx="${w*0.6}" cy="${h*0.62}" r="${w*0.13}" fill="none" stroke="#8b5000" stroke-width="${w*0.04}"/>
+  <!-- lion eye -->
+  <circle cx="${w*0.64}" cy="${h*0.6}" r="${w*0.02}" fill="#1a1a00"/>
+  <!-- woman -->
+  <ellipse cx="${w*0.38}" cy="${h*0.46}" rx="${w*0.09}" ry="${w*0.11}" fill="#f0c890"/>
+  <ellipse cx="${w*0.38}" cy="${h*0.6}" rx="${w*0.12}" ry="${h*0.1}" fill="#ffffff" opacity="0.85"/>
+  <!-- flower crown -->
+  <circle cx="${w*0.32}" cy="${h*0.42}" r="${w*0.02}" fill="#ff80a0"/>
+  <circle cx="${w*0.38}" cy="${h*0.39}" r="${w*0.02}" fill="#ff60c0"/>
+  <circle cx="${w*0.44}" cy="${h*0.42}" r="${w*0.02}" fill="#ff80a0"/>
+  <!-- infinity -->
+  <path d="M${w*0.28},${h*0.33} Q${w*0.32},${h*0.3} ${w*0.38},${h*0.33} Q${w*0.44},${h*0.36} ${w*0.48},${h*0.33} Q${w*0.44},${h*0.3} ${w*0.38},${h*0.33} Q${w*0.32},${h*0.36} ${w*0.28},${h*0.33}" fill="none" stroke="#c9a84c" stroke-width="1.2"/>
+  <!-- hands on lion jaw -->
+  <path d="M${w*0.5},${h*0.6} Q${w*0.56},${h*0.58} ${w*0.58},${h*0.62}" fill="none" stroke="#f0c890" stroke-width="2.5"/>`;
+  return svgBase(w,h,c,'VIII','STRENGTH');
+}
+
+function drawHermit(w,h) {
+  var c = `
+  <!-- mountain path -->
+  <path d="M0,${h*0.55} Q${w*0.4},${h*0.4} ${w*0.6},${h*0.45} Q${w*0.8},${h*0.5} ${w},${h*0.4} L${w},${h} L0,${h}Z" fill="#1a1a2a" opacity="0.85"/>
+  <!-- peak snow -->
+  <path d="M${w*0.5},${h*0.15} L${w*0.35},${h*0.4} L${w*0.65},${h*0.4}Z" fill="#d0d0e0" opacity="0.3"/>
+  <!-- figure -->
+  <ellipse cx="${w*0.5}" cy="${h*0.37}" rx="${w*0.09}" ry="${w*0.1}" fill="#e8d0a0"/>
+  <!-- long robe -->
+  <path d="M${w*0.4},${h*0.46} Q${w*0.38},${h*0.75} ${w*0.42},${h*0.82} Q${w*0.5},${h*0.85} ${w*0.58},${h*0.82} Q${w*0.62},${h*0.75} ${w*0.6},${h*0.46}Z" fill="#404050"/>
+  <!-- staff -->
+  <line x1="${w*0.38}" y1="${h*0.82}" x2="${w*0.35}" y2="${h*0.38}" stroke="#8a7060" stroke-width="3"/>
+  <!-- lantern -->
+  <rect x="${w*0.62}" y="${h*0.32}" width="${w*0.1}" height="${h*0.12}" rx="3" fill="#0d0a00" stroke="#c9a84c" stroke-width="1"/>
+  <!-- star inside lantern -->
+  <polygon points="${w*0.67},${h*0.35} ${w*0.685},${h*0.38} ${w*0.72},${h*0.38} ${w*0.695},${h*0.4} ${w*0.705},${h*0.43} ${w*0.67},${h*0.41} ${w*0.635},${h*0.43} ${w*0.645},${h*0.4} ${w*0.62},${h*0.38} ${w*0.655},${h*0.38}" fill="#ffcc00" opacity="0.85"/>
+  <!-- lantern arm -->
+  <line x1="${w*0.6}" y1="${h*0.46}" x2="${w*0.67}" y2="${h*0.44}" stroke="#f0c890" stroke-width="2"/>
+  <!-- beard -->
+  <path d="M${w*0.43},${h*0.43} Q${w*0.5},${h*0.48} ${w*0.57},${h*0.43}" fill="#a0a090" opacity="0.8"/>
+  <!-- stars in sky -->
+  <circle cx="${w*0.2}" cy="${h*0.12}" r="1.2" fill="#fff" opacity="0.7"/>
+  <circle cx="${w*0.8}" cy="${h*0.1}" r="1" fill="#c9a84c" opacity="0.8"/>
+  <circle cx="${w*0.15}" cy="${h*0.28}" r="0.8" fill="#fff" opacity="0.5"/>`;
+  return svgBase(w,h,c,'IX','THE HERMIT');
+}
+
+function drawWheel(w,h) {
+  var c = `
+  <!-- clouds -->
+  <ellipse cx="${w*0.15}" cy="${h*0.55}" rx="${w*0.12}" ry="${h*0.04}" fill="#d0d8e0" opacity="0.25"/>
+  <ellipse cx="${w*0.85}" cy="${h*0.5}" rx="${w*0.12}" ry="${h*0.04}" fill="#d0d8e0" opacity="0.25"/>
+  <!-- figures in clouds (evangelist symbols) -->
+  <!-- outer wheel ring -->
+  <circle cx="${w*0.5}" cy="${h*0.48}" r="${w*0.38}" fill="none" stroke="#c9a84c" stroke-width="2"/>
+  <!-- middle ring -->
+  <circle cx="${w*0.5}" cy="${h*0.48}" r="${w*0.27}" fill="none" stroke="#8a6820" stroke-width="1.2"/>
+  <!-- inner ring -->
+  <circle cx="${w*0.5}" cy="${h*0.48}" r="${w*0.1}" fill="#1a0820" stroke="#c9a84c" stroke-width="1"/>
+  <!-- spokes -->
+  <line x1="${w*0.5}" y1="${h*0.1}" x2="${w*0.5}" y2="${h*0.86}" stroke="#c9a84c" stroke-width="1"/>
+  <line x1="${w*0.12}" y1="${h*0.48}" x2="${w*0.88}" y2="${h*0.48}" stroke="#c9a84c" stroke-width="1"/>
+  <line x1="${w*0.23}" y1="${h*0.21}" x2="${w*0.77}" y2="${h*0.75}" stroke="#c9a84c" stroke-width="1"/>
+  <line x1="${w*0.77}" y1="${h*0.21}" x2="${w*0.23}" y2="${h*0.75}" stroke="#c9a84c" stroke-width="1"/>
+  <!-- TARO letters -->
+  <text x="${w*0.5}" y="${h*0.37}" font-family="serif" font-size="${w*0.08}" fill="#c9a84c" text-anchor="middle" opacity="0.9">T</text>
+  <text x="${w*0.62}" y="${h*0.5}" font-family="serif" font-size="${w*0.08}" fill="#c9a84c" text-anchor="middle" opacity="0.9">A</text>
+  <text x="${w*0.5}" y="${h*0.62}" font-family="serif" font-size="${w*0.08}" fill="#c9a84c" text-anchor="middle" opacity="0.9">R</text>
+  <text x="${w*0.38}" y="${h*0.5}" font-family="serif" font-size="${w*0.08}" fill="#c9a84c" text-anchor="middle" opacity="0.9">O</text>
+  <!-- Sphinx on top -->
+  <ellipse cx="${w*0.5}" cy="${h*0.13}" rx="${w*0.07}" ry="${w*0.05}" fill="#c8a030"/>
+  <circle cx="${w*0.5}" cy="${h*0.1}" r="${w*0.04}" fill="#f0c890"/>
+  <!-- serpent on side -->
+  <path d="M${w*0.14},${h*0.38} Q${w*0.1},${h*0.48} ${w*0.14},${h*0.58}" fill="none" stroke="#408030" stroke-width="3"/>
+  <!-- Anubis on side -->
+  <ellipse cx="${w*0.84}" cy="${h*0.58}" rx="${w*0.05}" ry="${w*0.06}" fill="#c8a030"/>
+  <circle cx="${w*0.84}" cy="${h*0.53}" r="${w*0.03}" fill="#c8a030"/>`;
+  return svgBase(w,h,c,'X','WHEEL OF FORTUNE');
+}
+
+function drawJustice(w,h) {
+  var c = `
+  <!-- pillars -->
+  <rect x="${w*0.08}" y="${h*0.2}" width="${w*0.14}" height="${h*0.6}" rx="3" fill="#180840" stroke="#c9a84c" stroke-width="0.8"/>
+  <rect x="${w*0.78}" y="${h*0.2}" width="${w*0.14}" height="${h*0.6}" rx="3" fill="#180840" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- figure -->
+  <ellipse cx="${w*0.5}" cy="${h*0.3}" rx="${w*0.1}" ry="${w*0.11}" fill="#f0c890"/>
+  <rect x="${w*0.38}" y="${h*0.4}" width="${w*0.24}" height="${h*0.38}" rx="3" fill="#8b1a2a" opacity="0.9"/>
+  <!-- crown -->
+  <rect x="${w*0.4}" y="${h*0.19}" width="${w*0.2}" height="${h*0.04}" rx="2" fill="#c9a84c"/>
+  <!-- scales -->
+  <line x1="${w*0.27}" y1="${h*0.38}" x2="${w*0.73}" y2="${h*0.38}" stroke="#c9a84c" stroke-width="1.5"/>
+  <line x1="${w*0.5}" y1="${h*0.35}" x2="${w*0.5}" y2="${h*0.55}" stroke="#c9a84c" stroke-width="2"/>
+  <!-- left scale pan -->
+  <path d="M${w*0.2},${h*0.44} Q${w*0.27},${h*0.48} ${w*0.34},${h*0.44}" fill="none" stroke="#c9a84c" stroke-width="1.2"/>
+  <line x1="${w*0.27}" y1="${h*0.38}" x2="${w*0.2}" y2="${h*0.44}" stroke="#c9a84c" stroke-width="0.8"/>
+  <line x1="${w*0.27}" y1="${h*0.38}" x2="${w*0.34}" y2="${h*0.44}" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- right scale pan -->
+  <path d="M${w*0.66},${h*0.48} Q${w*0.73},${h*0.52} ${w*0.8},${h*0.48}" fill="none" stroke="#c9a84c" stroke-width="1.2"/>
+  <line x1="${w*0.73}" y1="${h*0.38}" x2="${w*0.66}" y2="${h*0.48}" stroke="#c9a84c" stroke-width="0.8"/>
+  <line x1="${w*0.73}" y1="${h*0.38}" x2="${w*0.8}" y2="${h*0.48}" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- sword -->
+  <line x1="${w*0.68}" y1="${h*0.2}" x2="${w*0.72}" y2="${h*0.62}" stroke="#c0c0d0" stroke-width="2.5"/>
+  <line x1="${w*0.64}" y1="${h*0.42}" x2="${w*0.76}" y2="${h*0.44}" stroke="#c9a84c" stroke-width="1.5"/>
+  <!-- curtain behind -->
+  <rect x="${w*0.22}" y="${h*0.2}" width="${w*0.56}" height="${h*0.6}" rx="2" fill="#c9a84c" opacity="0.05"/>`;
+  return svgBase(w,h,c,'XI','JUSTICE');
+}
+
+function drawHangedMan(w,h) {
+  var c = `
+  <!-- T-frame tree -->
+  <line x1="${w*0.3}" y1="${h*0.15}" x2="${w*0.3}" y2="${h*0.85}" stroke="#4a2810" stroke-width="8"/>
+  <line x1="${w*0.7}" y1="${h*0.15}" x2="${w*0.7}" y2="${h*0.85}" stroke="#4a2810" stroke-width="8"/>
+  <line x1="${w*0.3}" y1="${h*0.28}" x2="${w*0.7}" y2="${h*0.28}" stroke="#4a2810" stroke-width="6"/>
+  <!-- leaves on poles -->
+  <circle cx="${w*0.3}" cy="${h*0.18}" r="${w*0.04}" fill="#408030" opacity="0.7"/>
+  <circle cx="${w*0.7}" cy="${h*0.18}" r="${w*0.04}" fill="#408030" opacity="0.7"/>
+  <!-- rope -->
+  <line x1="${w*0.5}" y1="${h*0.28}" x2="${w*0.5}" y2="${h*0.35}" stroke="#c8a870" stroke-width="1.5"/>
+  <!-- hanging figure (upside down) -->
+  <!-- head at bottom -->
+  <circle cx="${w*0.5}" cy="${h*0.72}" r="${w*0.1}" fill="#f0c890"/>
+  <!-- halo -->
+  <circle cx="${w*0.5}" cy="${h*0.72}" r="${w*0.14}" fill="none" stroke="#c9a84c" stroke-width="1.2" opacity="0.6" stroke-dasharray="3 3"/>
+  <!-- body -->
+  <rect x="${w*0.42}" y="${h*0.48}" width="${w*0.16}" height="${h*0.24}" rx="3" fill="#2040a0" opacity="0.85"/>
+  <!-- one leg hooked up, one hanging -->
+  <line x1="${w*0.5}" y1="${h*0.48}" x2="${w*0.5}" y2="${h*0.35}" stroke="#a0a0b0" stroke-width="3"/>
+  <line x1="${w*0.5}" y1="${h*0.5}" x2="${w*0.38}" y2="${h*0.42}" stroke="#2040a0" stroke-width="3"/>
+  <!-- crossed leg -->
+  <path d="M${w*0.42},${h*0.48} Q${w*0.35},${h*0.44} ${w*0.38},${h*0.38}" fill="none" stroke="#c84040" stroke-width="3"/>
+  <!-- arms behind back -->
+  <line x1="${w*0.42}" y1="${h*0.58}" x2="${w*0.33}" y2="${h*0.65}" stroke="#f0c890" stroke-width="2"/>
+  <line x1="${w*0.58}" y1="${h*0.58}" x2="${w*0.67}" y2="${h*0.65}" stroke="#f0c890" stroke-width="2"/>
+  <!-- expression serene -->
+  <path d="M${w*0.46},${h*0.74} Q${w*0.5},${h*0.77} ${w*0.54},${h*0.74}" fill="none" stroke="#8a6840" stroke-width="1"/>`;
+  return svgBase(w,h,c,'XII','THE HANGED MAN');
+}
+
+function drawDeath(w,h) {
+  var c = `
+  <!-- dawn sky -->
+  <circle cx="${w*0.5}" cy="${h*0.75}" r="${w*0.18}" fill="#ff6030" opacity="0.12"/>
+  <!-- ground flat -->
+  <rect x="0" y="${h*0.68}" width="${w}" height="${h*0.32}" fill="#1a1008" opacity="0.8"/>
+  <!-- skeleton horse + rider -->
+  <!-- horse body -->
+  <ellipse cx="${w*0.45}" cy="${h*0.6}" rx="${w*0.22}" ry="${w*0.1}" fill="#e8e0d0" opacity="0.9"/>
+  <ellipse cx="${w*0.64}" cy="${h*0.55}" rx="${w*0.1}" ry="${w*0.08}" fill="#e8e0d0" opacity="0.9"/>
+  <ellipse cx="${w*0.73}" cy="${h*0.5}" rx="${w*0.06}" ry="${w*0.055}" fill="#e8e0d0" opacity="0.9"/>
+  <!-- legs -->
+  <line x1="${w*0.35}" y1="${h*0.68}" x2="${w*0.32}" y2="${h*0.83}" stroke="#e0d8c8" stroke-width="4"/>
+  <line x1="${w*0.42}" y1="${h*0.69}" x2="${w*0.40}" y2="${h*0.83}" stroke="#e0d8c8" stroke-width="4"/>
+  <line x1="${w*0.52}" y1="${h*0.69}" x2="${w*0.54}" y2="${h*0.83}" stroke="#e0d8c8" stroke-width="4"/>
+  <line x1="${w*0.60}" y1="${h*0.68}" x2="${w*0.63}" y2="${h*0.83}" stroke="#e0d8c8" stroke-width="4"/>
+  <!-- rider skeleton -->
+  <!-- skull -->
+  <circle cx="${w*0.5}" cy="${h*0.32}" r="${w*0.07}" fill="#e8e0d0"/>
+  <!-- eye sockets -->
+  <ellipse cx="${w*0.46}" cy="${h*0.31}" rx="${w*0.02}" ry="${w*0.025}" fill="#1a1008"/>
+  <ellipse cx="${w*0.54}" cy="${h*0.31}" rx="${w*0.02}" ry="${w*0.025}" fill="#1a1008"/>
+  <!-- ribcage -->
+  <rect x="${w*0.43}" y="${h*0.38}" width="${w*0.14}" height="${h*0.14}" rx="2" fill="none" stroke="#e8e0d0" stroke-width="1.5"/>
+  <line x1="${w*0.5}" y1="${h*0.38}" x2="${w*0.5}" y2="${h*0.52}" stroke="#e8e0d0" stroke-width="1"/>
+  <!-- banner with white rose -->
+  <line x1="${w*0.65}" y1="${h*0.18}" x2="${w*0.65}" y2="${h*0.55}" stroke="#c0c0c0" stroke-width="2"/>
+  <rect x="${w*0.65}" y="${h*0.18}" width="${w*0.2}" height="${h*0.12}" rx="2" fill="#e0e0e0" opacity="0.9"/>
+  <circle cx="${w*0.78}" cy="${h*0.24}" r="${w*0.04}" fill="#ffffff" opacity="0.9"/>
+  <!-- fallen figures -->
+  <ellipse cx="${w*0.2}" cy="${h*0.72}" rx="${w*0.1}" ry="${h*0.04}" fill="#f0c890" opacity="0.6"/>
+  <!-- bishop in path -->
+  <circle cx="${w*0.32}" cy="${h*0.64}" r="${w*0.04}" fill="#f0c890"/>`;
+  return svgBase(w,h,c,'XIII','DEATH');
+}
+
+function drawTemperance(w,h) {
+  var c = `
+  <!-- sunrise -->
+  <circle cx="${w*0.5}" cy="${h*0.8}" r="${w*0.18}" fill="#ffcc30" opacity="0.15"/>
+  <!-- water pool -->
+  <ellipse cx="${w*0.38}" cy="${h*0.72}" rx="${w*0.2}" ry="${w*0.08}" fill="#2060a0" opacity="0.7"/>
+  <!-- iris flowers on bank -->
+  <line x1="${w*0.2}" y1="${h*0.72}" x2="${w*0.2}" y2="${h*0.58}" stroke="#4a8020" stroke-width="2"/>
+  <ellipse cx="${w*0.2}" cy="${h*0.57}" rx="${w*0.03}" ry="${h*0.04}" fill="#9030d0"/>
+  <line x1="${w*0.26}" y1="${h*0.72}" x2="${w*0.24}" y2="${h*0.6}" stroke="#4a8020" stroke-width="2"/>
+  <ellipse cx="${w*0.24}" cy="${h*0.59}" rx="${w*0.03}" ry="${h*0.04}" fill="#9030d0"/>
+  <!-- path to mountains -->
+  <path d="M${w*0.55},${h*0.72} Q${w*0.7},${h*0.65} ${w*0.85},${h*0.5} Q${w*0.9},${h*0.45} ${w},${h*0.42}" fill="none" stroke="#c9a84c" stroke-width="1" opacity="0.5"/>
+  <path d="M${w*0.7},${h*0.4} L${w*0.82},${h*0.25} L${w*0.9},${h*0.4}Z" fill="#2a1830" opacity="0.5"/>
+  <!-- angel figure -->
+  <!-- wings -->
+  <path d="M${w*0.3},${h*0.42} Q${w*0.18},${h*0.32} ${w*0.12},${h*0.42} Q${w*0.2},${h*0.48} ${w*0.35},${h*0.46}Z" fill="#e0e8ff" opacity="0.7"/>
+  <path d="M${w*0.7},${h*0.42} Q${w*0.82},${h*0.32} ${w*0.88},${h*0.42} Q${w*0.8},${h*0.48} ${w*0.65},${h*0.46}Z" fill="#e0e8ff" opacity="0.7"/>
+  <!-- robe -->
+  <ellipse cx="${w*0.5}" cy="${h*0.58}" rx="${w*0.16}" ry="${h*0.16}" fill="#ffffff" opacity="0.85"/>
+  <!-- head -->
+  <circle cx="${w*0.5}" cy="${h*0.32}" r="${w*0.09}" fill="#f0c890"/>
+  <!-- solar disc -->
+  <circle cx="${w*0.5}" cy="${h*0.3}" r="${w*0.04}" fill="#ffcc00" opacity="0.8"/>
+  <!-- two chalices -->
+  <rect x="${w*0.32}" y="${h*0.44}" width="${w*0.08}" height="${h*0.1}" rx="2" fill="#c9a84c"/>
+  <rect x="${w*0.6}" y="${h*0.44}" width="${w*0.08}" height="${h*0.1}" rx="2" fill="#c9a84c"/>
+  <!-- water flowing between -->
+  <path d="M${w*0.4},${h*0.48} Q${w*0.5},${h*0.44} ${w*0.6},${h*0.5}" fill="none" stroke="#60a0ff" stroke-width="2" opacity="0.8"/>
+  <!-- triangle on robe -->
+  <polygon points="${w*0.5},${h*0.5} ${w*0.44},${h*0.6} ${w*0.56},${h*0.6}" fill="none" stroke="#c9a84c" stroke-width="1"/>
+  <!-- inner dot -->
+  <circle cx="${w*0.5}" cy="${h*0.56}" r="${w*0.015}" fill="#c9a84c"/>`;
+  return svgBase(w,h,c,'XIV','TEMPERANCE');
+}
+
+function drawDevil(w,h) {
+  var c = `
+  <!-- dark bg -->
+  <rect x="0" y="0" width="${w}" height="${h}" fill="#050108"/>
+  <!-- devil figure -->
+  <!-- bat wings -->
+  <path d="M${w*0.28},${h*0.42} Q${w*0.12},${h*0.3} ${w*0.05},${h*0.42} Q${w*0.1},${h*0.52} ${w*0.3},${h*0.5}Z" fill="#3a1020" stroke="#c9a84c" stroke-width="0.5"/>
+  <path d="M${w*0.72},${h*0.42} Q${w*0.88},${h*0.3} ${w*0.95},${h*0.42} Q${w*0.9},${h*0.52} ${w*0.7},${h*0.5}Z" fill="#3a1020" stroke="#c9a84c" stroke-width="0.5"/>
+  <!-- body -->
+  <ellipse cx="${w*0.5}" cy="${h*0.55}" rx="${w*0.2}" ry="${h*0.17}" fill="#2a0a08"/>
+  <!-- horns -->
+  <path d="M${w*0.42},${h*0.25} Q${w*0.38},${h*0.15} ${w*0.35},${h*0.2}" fill="none" stroke="#8b1a2a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M${w*0.58},${h*0.25} Q${w*0.62},${h*0.15} ${w*0.65},${h*0.2}" fill="none" stroke="#8b1a2a" stroke-width="4" stroke-linecap="round"/>
+  <!-- devil head -->
+  <ellipse cx="${w*0.5}" cy="${h*0.3}" rx="${w*0.13}" ry="${w*0.12}" fill="#1a0808"/>
+  <!-- inverted pentagram -->
+  <polygon points="${w*0.5},${h*0.2} ${w*0.44},${h*0.27} ${w*0.56},${h*0.27}" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.5"/>
+  <!-- eyes glowing red -->
+  <circle cx="${w*0.44}" cy="${h*0.28}" r="${w*0.025}" fill="#ff2020" opacity="0.9"/>
+  <circle cx="${w*0.56}" cy="${h*0.28}" r="${w*0.025}" fill="#ff2020" opacity="0.9"/>
+  <!-- pedestal -->
+  <rect x="${w*0.35}" y="${h*0.65}" width="${w*0.3}" height="${h*0.1}" rx="3" fill="#1a1020" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- chained figures (small) -->
+  <circle cx="${w*0.35}" cy="${h*0.72}" r="${w*0.05}" fill="#f0c890"/>
+  <ellipse cx="${w*0.35}" cy="${h*0.79}" rx="${w*0.04}" ry="${w*0.05}" fill="#804020"/>
+  <line x1="${w*0.35}" y1="${h*0.72}" x2="${w*0.5}" y2="${h*0.68}" stroke="#808080" stroke-width="1.2"/>
+  <circle cx="${w*0.65}" cy="${h*0.72}" r="${w*0.05}" fill="#f0c890"/>
+  <ellipse cx="${w*0.65}" cy="${h*0.79}" rx="${w*0.04}" ry="${w*0.05}" fill="#408040"/>
+  <line x1="${w*0.65}" y1="${h*0.72}" x2="${w*0.5}" y2="${h*0.68}" stroke="#808080" stroke-width="1.2"/>
+  <!-- torch hand -->
+  <line x1="${w*0.6}" y1="${h*0.45}" x2="${w*0.65}" y2="${h*0.32}" stroke="#8a6820" stroke-width="2"/>
+  <ellipse cx="${w*0.65}" cy="${h*0.3}" rx="${w*0.03}" ry="${h*0.04}" fill="#ff8000" opacity="0.9"/>`;
+  var cx=w/2, cy=h/2, r8=w*0.08, r3=w*0.03;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${w}" height="${h}" fill="#050108"/>
+  ${c}
+  <rect x="6" y="6" width="${w-12}" height="${h-12}" fill="none" stroke="rgba(200,168,75,0.25)" stroke-width="0.8" rx="6"/>
+  <text x="${w/2}" y="20" font-family="serif" font-size="${w*0.09}" fill="#c9a84c" text-anchor="middle" opacity="0.9">XV</text>
+  <text x="${w/2}" y="${h-8}" font-family="serif" font-size="${w*0.07}" fill="#c9a84c" text-anchor="middle" opacity="0.7">THE DEVIL</text>
+</svg>`;
+}
+
+function drawTower(w,h) {
+  var c = `
+  <!-- dark stormy sky -->
+  <rect x="0" y="0" width="${w}" height="${h*0.75}" fill="#0a0810"/>
+  <!-- lightning -->
+  <path d="M${w*0.6},${h*0.1} L${w*0.5},${h*0.28} L${w*0.55},${h*0.28} L${w*0.45},${h*0.45}" fill="none" stroke="#ffe060" stroke-width="2.5" opacity="0.9"/>
+  <!-- tower -->
+  <rect x="${w*0.28}" y="${h*0.25}" width="${w*0.44}" height="${h*0.5}" rx="3" fill="#2a2030" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- crown of tower -->
+  <rect x="${w*0.24}" y="${h*0.2}" width="${w*0.52}" height="${h*0.07}" rx="2" fill="#3a2040" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- windows -->
+  <rect x="${w*0.38}" y="${h*0.35}" width="${w*0.1}" height="${h*0.12}" rx="2" fill="#ffaa20" opacity="0.7"/>
+  <rect x="${w*0.52}" y="${h*0.42}" width="${w*0.1}" height="${h*0.1}" rx="2" fill="#ffaa20" opacity="0.5"/>
+  <!-- ground -->
+  <rect x="0" y="${h*0.73}" width="${w}" height="${h*0.27}" fill="#100808" opacity="0.9"/>
+  <!-- crown being blown off -->
+  <rect x="${w*0.6}" y="${h*0.14}" width="${w*0.2}" height="${h*0.05}" rx="2" fill="#c9a84c" transform="rotate(-20,${w*0.7},${h*0.17})"/>
+  <!-- falling figures -->
+  <circle cx="${w*0.22}" cy="${h*0.55}" r="${w*0.05}" fill="#f0c890"/>
+  <rect x="${w*0.18}" y="${h*0.6}" width="${w*0.08}" height="${h*0.1}" rx="2" fill="#c04040" transform="rotate(30,${w*0.22},${h*0.65})"/>
+  <circle cx="${w*0.72}" cy="${h*0.58}" r="${w*0.05}" fill="#f0c890"/>
+  <rect x="${w*0.68}" y="${h*0.63}" width="${w*0.08}" height="${h*0.1}" rx="2" fill="#4040c0" transform="rotate(-25,${w*0.72},${h*0.68})"/>
+  <!-- flames on top -->
+  <ellipse cx="${w*0.4}" cy="${h*0.2}" rx="${w*0.04}" ry="${h*0.04}" fill="#ff4010" opacity="0.8"/>
+  <ellipse cx="${w*0.5}" cy="${h*0.18}" rx="${w*0.04}" ry="${h*0.05}" fill="#ff8020" opacity="0.9"/>
+  <ellipse cx="${w*0.6}" cy="${h*0.21}" rx="${w*0.03}" ry="${h*0.03}" fill="#ff4010" opacity="0.8"/>`;
+  return svgBase(w,h,c,'XVI','THE TOWER');
+}
+
+function drawStar(w,h) {
+  var c = `
+  <!-- night sky -->
+  <circle cx="${w*0.5}" cy="${h*0.15}" r="${w*0.1}" fill="#fff8c0" opacity="0.9"/>
+  <polygon points="${w*0.5},${h*0.08} ${w*0.52},${h*0.14} ${w*0.58},${h*0.15} ${w*0.53},${h*0.19} ${w*0.55},${h*0.25} ${w*0.5},${h*0.21} ${w*0.45},${h*0.25} ${w*0.47},${h*0.19} ${w*0.42},${h*0.15} ${w*0.48},${h*0.14}" fill="#ffe040"/>
+  <!-- small stars -->
+  <circle cx="${w*0.22}" cy="${h*0.12}" r="2" fill="#c8d8ff" opacity="0.8"/>
+  <circle cx="${w*0.78}" cy="${h*0.1}" r="2.5" fill="#c8d8ff" opacity="0.9"/>
+  <circle cx="${w*0.15}" cy="${h*0.3}" r="1.5" fill="#fff" opacity="0.6"/>
+  <circle cx="${w*0.85}" cy="${h*0.25}" r="1.5" fill="#ffe0a0" opacity="0.7"/>
+  <circle cx="${w*0.12}" cy="${h*0.5}" r="1" fill="#fff" opacity="0.5"/>
+  <circle cx="${w*0.88}" cy="${h*0.45}" r="1.2" fill="#c8d8ff" opacity="0.5"/>
+  <!-- mountains/hills -->
+  <path d="M0,${h*0.72} Q${w*0.3},${h*0.55} ${w*0.6},${h*0.65} Q${w*0.8},${h*0.72} ${w},${h*0.6} L${w},${h} L0,${h}Z" fill="#0a1a0a"/>
+  <!-- pool -->
+  <ellipse cx="${w*0.32}" cy="${h*0.75}" rx="${w*0.22}" ry="${w*0.1}" fill="#1a4870" opacity="0.85"/>
+  <!-- tree with ibis -->
+  <line x1="${w*0.82}" y1="${h*0.6}" x2="${w*0.82}" y2="${h*0.85}" stroke="#1a3010" stroke-width="4"/>
+  <path d="M${w*0.82},${h*0.65} Q${w*0.9},${h*0.58} ${w*0.95},${h*0.62} Q${w*0.88},${h*0.66} ${w*0.82},${h*0.65}" fill="#1a3010"/>
+  <ellipse cx="${w*0.92}" cy="${h*0.58}" rx="${w*0.05}" ry="${w*0.03}" fill="#f0f0f0"/>
+  <circle cx="${w*0.88}" cy="${h*0.57}" r="${w*0.025}" fill="#f0f0f0"/>
+  <path d="M${w*0.86},${h*0.57} Q${w*0.82},${h*0.56} ${w*0.79},${h*0.57}" fill="none" stroke="#ff8040" stroke-width="1.2"/>
+  <!-- woman kneeling -->
+  <path d="M${w*0.5},${h*0.62} Q${w*0.44},${h*0.72} ${w*0.42},${h*0.85} Q${w*0.46},${h*0.87} ${w*0.5},${h*0.85} Q${w*0.52},${h*0.72} ${w*0.56},${h*0.65}Z" fill="#c8a870"/>
+  <ellipse cx="${w*0.52}" cy="${h*0.56}" rx="${w*0.1}" ry="${h*0.12}" fill="#c8a870"/>
+  <circle cx="${w*0.52}" cy="${h*0.44}" r="${w*0.08}" fill="#f0c890"/>
+  <!-- pitchers -->
+  <rect x="${w*0.35}" y="${h*0.56}" width="${w*0.07}" height="${h*0.09}" rx="2" fill="#c9a84c"/>
+  <path d="M${w*0.35},${h*0.62} Q${w*0.25},${h*0.7} ${w*0.22},${h*0.78}" fill="none" stroke="#4a9aba" stroke-width="1.5" opacity="0.8"/>
+  <rect x="${w*0.65}" y="${h*0.58}" width="${w*0.07}" height="${h*0.09}" rx="2" fill="#c9a84c"/>
+  <path d="M${w*0.72},${h*0.64} Q${w*0.75},${h*0.72} ${w*0.72},${h*0.82}" fill="none" stroke="#4a9aba" stroke-width="1.5" opacity="0.8"/>`;
+  return svgBase(w,h,c,'XVII','THE STAR');
+}
+
+function drawMoon(w,h) {
+  var c = `
+  <!-- full moon -->
+  <circle cx="${w*0.5}" cy="${h*0.22}" r="${w*0.18}" fill="#e8e0c0" opacity="0.2"/>
+  <circle cx="${w*0.5}" cy="${h*0.22}" r="${w*0.14}" fill="#f0e8c0" opacity="0.35"/>
+  <circle cx="${w*0.5}" cy="${h*0.22}" r="${w*0.1}" fill="#f8f0d0" opacity="0.5"/>
+  <!-- crescent inner -->
+  <circle cx="${w*0.57}" cy="${h*0.2}" r="${w*0.09}" fill="#0d0a1a" opacity="0.85"/>
+  <!-- towers -->
+  <rect x="${w*0.08}" y="${h*0.45}" width="${w*0.14}" height="${h*0.35}" rx="3" fill="#1a0f30" stroke="#c9a84c" stroke-width="0.8"/>
+  <rect x="${w*0.78}" y="${h*0.45}" width="${w*0.14}" height="${h*0.35}" rx="3" fill="#1a0f30" stroke="#c9a84c" stroke-width="0.8"/>
+  <!-- tower windows -->
+  <rect x="${w*0.12}" y="${h*0.52}" width="${w*0.06}" height="${h*0.08}" rx="2" fill="#ffaa00" opacity="0.4"/>
+  <rect x="${w*0.82}" y="${h*0.52}" width="${w*0.06}" height="${h*0.08}" rx="2" fill="#ffaa00" opacity="0.4"/>
+  <!-- path between towers -->
+  <path d="M${w*0.22},${h*0.8} Q${w*0.5},${h*0.75} ${w*0.78},${h*0.8}" fill="none" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>
+  <!-- water pool -->
+  <ellipse cx="${w*0.5}" cy="${h*0.72}" rx="${w*0.25}" ry="${w*0.1}" fill="#1a2850" opacity="0.9"/>
+  <!-- ripple in water -->
+  <path d="M${w*0.35},${h*0.72} Q${w*0.5},${h*0.69} ${w*0.65},${h*0.72}" fill="none" stroke="#3060a0" stroke-width="0.8" opacity="0.5"/>
+  <!-- crayfish in water -->
+  <ellipse cx="${w*0.5}" cy="${h*0.73}" rx="${w*0.06}" ry="${w*0.04}" fill="#c04040" opacity="0.8"/>
+  <line x1="${w*0.44}" y1="${h*0.73}" x2="${w*0.38}" y2="${h*0.7}" stroke="#c04040" stroke-width="1"/>
+  <line x1="${w*0.44}" y1="${h*0.74}" x2="${w*0.38}" y2="${h*0.77}" stroke="#c04040" stroke-width="1"/>
+  <line x1="${w*0.56}" y1="${h*0.73}" x2="${w*0.62}" y2="${h*0.7}" stroke="#c04040" stroke-width="1"/>
+  <line x1="${w*0.56}" y1="${h*0.74}" x2="${w*0.62}" y2="${h*0.77}" stroke="#c04040" stroke-width="1"/>
+  <!-- wolf on left -->
+  <path d="M${w*0.18},${h*0.62} Q${w*0.12},${h*0.55} ${w*0.16},${h*0.5} Q${w*0.22},${h*0.57} ${w*0.25},${h*0.55} Q${w*0.3},${h*0.6} ${w*0.28},${h*0.67}Z" fill="#5a5050"/>
+  <!-- dog on right -->
+  <path d="M${w*0.72},${h*0.62} Q${w*0.78},${h*0.55} ${w*0.8},${h*0.5} Q${w*0.84},${h*0.57} ${w*0.88},${h*0.55} Q${w*0.88},${h*0.62} ${w*0.82},${h*0.67}Z" fill="#8a7060"/>
+  <!-- dew drops / yods -->
+  <ellipse cx="${w*0.3}" cy="${h*0.4}" rx="2" ry="3" fill="#c9a84c" opacity="0.5"/>
+  <ellipse cx="${w*0.7}" cy="${h*0.38}" rx="2" ry="3" fill="#c9a84c" opacity="0.5"/>
+  <ellipse cx="${w*0.42}" cy="${h*0.35}" rx="2" ry="3" fill="#c9a84c" opacity="0.4"/>
+  <ellipse cx="${w*0.6}" cy="${h*0.42}" rx="2" ry="3" fill="#c9a84c" opacity="0.4"/>`;
+  return svgBase(w,h,c,'XVIII','THE MOON');
+}
+
+function drawSun(w,h) {
+  var c = `
+  <!-- sky gradient -->
+  <rect x="0" y="0" width="${w}" height="${h}" fill="#150b00"/>
+  <!-- sun -->
+  <circle cx="${w*0.5}" cy="${h*0.28}" r="${w*0.22}" fill="#ffcc00" opacity="0.2"/>
+  <circle cx="${w*0.5}" cy="${h*0.28}" r="${w*0.18}" fill="#ffcc00" opacity="0.4"/>
+  <circle cx="${w*0.5}" cy="${h*0.28}" r="${w*0.13}" fill="#ffe840" opacity="0.9"/>
+  <!-- sun rays straight -->
+  <line x1="${w*0.5}" y1="${h*0.06}" x2="${w*0.5}" y2="${h*0.13}" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+  <line x1="${w*0.5}" y1="${h*0.43}" x2="${w*0.5}" y2="${h*0.5}" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+  <line x1="${w*0.14}" y1="${h*0.28}" x2="${w*0.22}" y2="${h*0.28}" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+  <line x1="${w*0.78}" y1="${h*0.28}" x2="${w*0.86}" y2="${h*0.28}" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+  <!-- diagonal rays -->
+  <line x1="${w*0.22}" y1="${h*0.1}" x2="${w*0.29}" y2="${h*0.17}" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+  <line x1="${w*0.78}" y1="${h*0.1}" x2="${w*0.71}" y2="${h*0.17}" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+  <line x1="${w*0.22}" y1="${h*0.46}" x2="${w*0.29}" y2="${h*0.39}" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+  <line x1="${w*0.78}" y1="${h*0.46}" x2="${w*0.71}" y2="${h*0.39}" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/>
+  <!-- sun face -->
+  <circle cx="${w*0.44}" cy="${h*0.26}" r="${w*0.025}" fill="#fff8c0" opacity="0.9"/>
+  <circle cx="${w*0.56}" cy="${h*0.26}" r="${w*0.025}" fill="#fff8c0" opacity="0.9"/>
+  <circle cx="${w*0.44}" cy="${h*0.26}" r="${w*0.015}" fill="#8b4513"/>
+  <circle cx="${w*0.56}" cy="${h*0.26}" r="${w*0.015}" fill="#8b4513"/>
+  <path d="M${w*0.44},${h*0.31} Q${w*0.5},${h*0.35} ${w*0.56},${h*0.31}" fill="none" stroke="#8b4513" stroke-width="1.2"/>
+  <!-- wall with sunflowers -->
+  <rect x="0" y="${h*0.67}" width="${w}" height="${h*0.16}" rx="2" fill="#2a1508" opacity="0.9"/>
+  <line x1="${w*0.22}" y1="${h*0.67}" x2="${w*0.22}" y2="${h*0.56}" stroke="#4a8020" stroke-width="2"/>
+  <circle cx="${w*0.22}" cy="${h*0.54}" r="${w*0.05}" fill="#ffd700"/><circle cx="${w*0.22}" cy="${h*0.54}" r="${w*0.03}" fill="#8b4513"/>
+  <line x1="${w*0.42}" y1="${h*0.67}" x2="${w*0.42}" y2="${h*0.59}" stroke="#4a8020" stroke-width="2"/>
+  <circle cx="${w*0.42}" cy="${h*0.57}" r="${w*0.05}" fill="#ffd700"/><circle cx="${w*0.42}" cy="${h*0.57}" r="${w*0.03}" fill="#8b4513"/>
+  <line x1="${w*0.62}" y1="${h*0.67}" x2="${w*0.62}" y2="${h*0.54}" stroke="#4a8020" stroke-width="2"/>
+  <circle cx="${w*0.62}" cy="${h*0.52}" r="${w*0.05}" fill="#ffd700"/><circle cx="${w*0.62}" cy="${h*0.52}" r="${w*0.03}" fill="#8b4513"/>
+  <line x1="${w*0.82}" y1="${h*0.67}" x2="${w*0.82}" y2="${h*0.58}" stroke="#4a8020" stroke-width="2"/>
+  <circle cx="${w*0.82}" cy="${h*0.56}" r="${w*0.045}" fill="#ffd700"/><circle cx="${w*0.82}" cy="${h*0.56}" r="${w*0.025}" fill="#8b4513"/>
+  <!-- horse and child -->
+  <ellipse cx="${w*0.46}" cy="${h*0.75}" rx="${w*0.2}" ry="${w*0.08}" fill="#f0ebe0"/>
+  <ellipse cx="${w*0.62}" cy="${h*0.7}" rx="${w*0.09}" ry="${w*0.06}" fill="#f0ebe0"/>
+  <ellipse cx="${w*0.7}" cy="${h*0.66}" rx="${w*0.05}" ry="${w*0.05}" fill="#f0ebe0"/>
+  <circle cx="${w*0.74}" cy="${h*0.63}" r="${w*0.035}" fill="#e0dbd0"/>
+  <!-- child on horse -->
+  <circle cx="${w*0.46}" cy="${h*0.66}" r="${w*0.06}" fill="#f5c8a0"/>
+  <ellipse cx="${w*0.46}" cy="${h*0.73}" rx="${w*0.07}" ry="${w*0.06}" fill="#ff5030"/>
+  <!-- child raised arm banner -->
+  <line x1="${w*0.46}" y1="${h*0.7}" x2="${w*0.58}" y2="${h*0.62}" stroke="#ff5030" stroke-width="2"/>
+  <circle cx="${w*0.6}" cy="${h*0.61}" r="${w*0.03}" fill="#f5c8a0"/>
+  <line x1="${w*0.6}" y1="${h*0.61}" x2="${w*0.6}" y2="${h*0.52}" stroke="#c0a060" stroke-width="1.5"/>
+  <rect x="${w*0.61}" y="${h*0.5}" width="${w*0.13}" height="${h*0.1}" rx="1" fill="#ff3030" opacity="0.85"/>`;
+  var cx=w/2, cy=h/2, r8=w*0.08, r3=w*0.03;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${w}" height="${h}" fill="#150b00"/>
+  ${c}
+  <rect x="6" y="6" width="${w-12}" height="${h-12}" fill="none" stroke="rgba(200,168,75,0.25)" stroke-width="0.8" rx="6"/>
+  <text x="${w/2}" y="20" font-family="serif" font-size="${w*0.09}" fill="#c9a84c" text-anchor="middle" opacity="0.9">XIX</text>
+  <text x="${w/2}" y="${h-8}" font-family="serif" font-size="${w*0.07}" fill="#c9a84c" text-anchor="middle" opacity="0.7">THE SUN</text>
+</svg>`;
+}
+
+function drawJudgement(w,h) {
+  var c = `
+  <!-- cloudy sky -->
+  <ellipse cx="${w*0.5}" cy="${h*0.18}" rx="${w*0.4}" ry="${h*0.08}" fill="#c0c0c0" opacity="0.12"/>
+  <!-- angel in clouds -->
+  <circle cx="${w*0.5}" cy="${h*0.14}" r="${w*0.09}" fill="#f0c890" opacity="0.9"/>
+  <path d="M${w*0.3},${h*0.2} Q${w*0.2},${h*0.12} ${w*0.15},${h*0.22} Q${w*0.25},${h*0.27} ${w*0.38},${h*0.25}Z" fill="#e8e0ff" opacity="0.65"/>
+  <path d="M${w*0.7},${h*0.2} Q${w*0.8},${h*0.12} ${w*0.85},${h*0.22} Q${w*0.75},${h*0.27} ${w*0.62},${h*0.25}Z" fill="#e8e0ff" opacity="0.65"/>
+  <!-- trumpet -->
+  <line x1="${w*0.5}" y1="${h*0.22}" x2="${w*0.72}" y2="${h*0.32}" stroke="#c9a84c" stroke-width="3"/>
+  <ellipse cx="${w*0.74}" cy="${h*0.33}" rx="${w*0.06}" ry="${w*0.04}" fill="#c9a84c" opacity="0.85"/>
+  <!-- cross banner on trumpet -->
+  <rect x="${w*0.58}" y="${h*0.24}" width="${w*0.1}" height="${h*0.08}" rx="1" fill="#f0f0f0" opacity="0.9"/>
+  <line x1="${w*0.61}" y1="${h*0.24}" x2="${w*0.61}" y2="${h*0.32}" stroke="#ff0000" stroke-width="1"/>
+  <line x1="${w*0.58}" y1="${h*0.27}" x2="${w*0.68}" y2="${h*0.27}" stroke="#ff0000" stroke-width="1"/>
+  <!-- coffins/sea -->
+  <ellipse cx="${w*0.5}" cy="${h*0.77}" rx="${w*0.44}" ry="${h*0.08}" fill="#1a3060" opacity="0.7"/>
+  <!-- rising figures -->
+  <!-- center figure arms up -->
+  <circle cx="${w*0.5}" cy="${h*0.6}" r="${w*0.07}" fill="#f0c890"/>
+  <rect x="${w*0.43}" y="${h*0.66}" width="${w*0.14}" height="${h*0.12}" rx="3" fill="#8060a0" opacity="0.85"/>
+  <line x1="${w*0.43}" y1="${h*0.68}" x2="${w*0.33}" y2="${h*0.6}" stroke="#f0c890" stroke-width="2.5"/>
+  <circle cx="${w*0.32}" cy="${h*0.59}" r="${w*0.03}" fill="#f0c890"/>
+  <line x1="${w*0.57}" y1="${h*0.68}" x2="${w*0.67}" y2="${h*0.6}" stroke="#f0c890" stroke-width="2.5"/>
+  <circle cx="${w*0.68}" cy="${h*0.59}" r="${w*0.03}" fill="#f0c890"/>
+  <!-- left figure -->
+  <circle cx="${w*0.26}" cy="${h*0.66}" r="${w*0.055}" fill="#f0c890"/>
+  <rect x="${w*0.21}" y="${h*0.71}" width="${w*0.1}" height="${h*0.1}" rx="3" fill="#c84040" opacity="0.85"/>
+  <!-- right figure -->
+  <circle cx="${w*0.74}" cy="${h*0.66}" r="${w*0.055}" fill="#f0c890"/>
+  <rect x="${w*0.69}" y="${h*0.71}" width="${w*0.1}" height="${h*0.1}" rx="3" fill="#4040c8" opacity="0.85"/>
+  <!-- sound waves from trumpet -->
+  <path d="M${w*0.74},${h*0.28} Q${w*0.82},${h*0.3} ${w*0.8},${h*0.36}" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.4"/>
+  <path d="M${w*0.74},${h*0.28} Q${w*0.84},${h*0.28} ${w*0.84},${h*0.36}" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.3"/>`;
+  return svgBase(w,h,c,'XX','JUDGEMENT');
+}
+
+function drawWorld(w,h) {
+  var c = `
+  <!-- wreath oval -->
+  <ellipse cx="${w*0.5}" cy="${h*0.5}" rx="${w*0.4}" ry="${h*0.38}" fill="none" stroke="#408030" stroke-width="6" opacity="0.7"/>
+  <ellipse cx="${w*0.5}" cy="${h*0.5}" rx="${w*0.4}" ry="${h*0.38}" fill="none" stroke="#60c040" stroke-width="3" opacity="0.5" stroke-dasharray="4 8"/>
+  <!-- ribbon ties -->
+  <path d="M${w*0.3},${h*0.14} Q${w*0.5},${h*0.12} ${w*0.7},${h*0.14}" fill="none" stroke="#c9a84c" stroke-width="2"/>
+  <path d="M${w*0.3},${h*0.86} Q${w*0.5},${h*0.88} ${w*0.7},${h*0.86}" fill="none" stroke="#c9a84c" stroke-width="2"/>
+  <!-- 4 corner symbols (tetramorphs) -->
+  <!-- top-left: angel -->
+  <circle cx="${w*0.15}" cy="${h*0.15}" r="${w*0.07}" fill="#f0c890" opacity="0.7"/>
+  <!-- top-right: eagle -->
+  <path d="M${w*0.78},${h*0.1} Q${w*0.88},${h*0.06} ${w*0.92},${h*0.15} Q${w*0.85},${h*0.16} ${w*0.78},${h*0.2}Z" fill="#3a2010" opacity="0.8"/>
+  <!-- bottom-left: bull -->
+  <ellipse cx="${w*0.15}" cy="${h*0.85}" rx="${w*0.08}" ry="${w*0.06}" fill="#8b4513" opacity="0.7"/>
+  <circle cx="${w*0.18}" cy="${h*0.82}" r="${w*0.03}" fill="#8b4513" opacity="0.7"/>
+  <!-- bottom-right: lion -->
+  <circle cx="${w*0.84}" cy="${h*0.85}" r="${w*0.06}" fill="#c8a030" opacity="0.8"/>
+  <circle cx="${w*0.84}" cy="${h*0.85}" r="${w*0.08}" fill="none" stroke="#8b5000" stroke-width="${w*0.03}" opacity="0.6"/>
+  <!-- dancing figure inside wreath -->
+  <circle cx="${w*0.5}" cy="${h*0.38}" r="${w*0.09}" fill="#f0c890"/>
+  <!-- fluttering cloth -->
+  <path d="M${w*0.38},${h*0.46} Q${w*0.35},${h*0.56} ${w*0.42},${h*0.64} Q${w*0.5},${h*0.58} ${w*0.58},${h*0.64} Q${w*0.65},${h*0.56} ${w*0.62},${h*0.46}Z" fill="#c9a84c" opacity="0.5"/>
+  <!-- body -->
+  <ellipse cx="${w*0.5}" cy="${h*0.5}" rx="${w*0.1}" ry="${h*0.1}" fill="#c8a870"/>
+  <!-- legs crossed -->
+  <line x1="${w*0.5}" y1="${h*0.58}" x2="${w*0.44}" y2="${h*0.7}" stroke="#c8a870" stroke-width="4"/>
+  <line x1="${w*0.5}" y1="${h*0.58}" x2="${w*0.56}" y2="${h*0.65}" stroke="#c8a870" stroke-width="4"/>
+  <!-- arms -->
+  <line x1="${w*0.42}" y1="${h*0.46}" x2="${w*0.3}" y2="${h*0.4}" stroke="#f0c890" stroke-width="3"/>
+  <line x1="${w*0.58}" y1="${h*0.46}" x2="${w*0.7}" y2="${h*0.4}" stroke="#f0c890" stroke-width="3"/>
+  <!-- wands in hands -->
+  <line x1="${w*0.28}" y1="${h*0.35}" x2="${w*0.3}" y2="${h*0.42}" stroke="#8a6820" stroke-width="2"/>
+  <line x1="${w*0.7}" y1="${h*0.35}" x2="${w*0.7}" y2="${h*0.42}" stroke="#8a6820" stroke-width="2"/>`;
+  return svgBase(w,h,c,'XXI','THE WORLD');
+}
+
+// Card back SVG
+function buildGrid(w,h) {
+  var out='', cols=6, rows=10;
+  for(var i=0;i<cols;i++){
+    for(var j=0;j<rows;j++){
+      var x=i*(w/5)+w/10, y=j*(h/9)+h/18;
+      out+='<polygon points="'+x+','+(y-8)+' '+(x+6)+','+y+' '+x+','+(y+8)+' '+(x-6)+','+y+'" fill="none" stroke="rgba(200,168,75,0.15)" stroke-width="0.5"/>';
+    }
+  }
+  return out;
+}
+function cardBackSVG(w,h) {
+  var cx=w/2, cy=h/2, r8=w*0.08, r3=w*0.03;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${w}" height="${h}" fill="#100820"/>
+  <!-- pattern -->
+  <rect x="8" y="8" width="${w-16}" height="${h-16}" fill="none" stroke="rgba(200,168,75,0.4)" stroke-width="0.8" rx="5"/>
+  <rect x="14" y="14" width="${w-28}" height="${h-28}" fill="none" stroke="rgba(200,168,75,0.2)" stroke-width="0.6" rx="3"/>
+  <!-- diamond grid -->
+  ${buildGrid(w,h)}
+  <!-- central rose -->
+  <circle cx="${w/2}" cy="${h/2}" r="${w*0.22}" fill="none" stroke="rgba(200,168,75,0.25)" stroke-width="1"/>
+  <circle cx="${w/2}" cy="${h/2}" r="${w*0.16}" fill="none" stroke="rgba(200,168,75,0.3)" stroke-width="0.8"/>
+  <circle cx="${w/2}" cy="${h/2}" r="${w*0.1}" fill="rgba(200,168,75,0.06)" stroke="#c9a84c" stroke-width="1"/>
+  <!-- 8-pointed star at center -->
+  <polygon points="${cx},${cy-r8} ${cx+r3},${cy-r3} ${cx+r8},${cy} ${cx+r3},${cy+r3} ${cx},${cy+r8} ${cx-r3},${cy+r3} ${cx-r8},${cy} ${cx-r3},${cy-r3}" fill="rgba(200,168,75,0.5)"/>
+  <!-- corner flourishes -->
+  <path d="M20,20 Q30,28 20,36" fill="none" stroke="rgba(200,168,75,0.4)" stroke-width="1"/>
+  <path d="M${w-20},20 Q${w-30},28 ${w-20},36" fill="none" stroke="rgba(200,168,75,0.4)" stroke-width="1"/>
+  <path d="M20,${h-20} Q30,${h-28} 20,${h-36}" fill="none" stroke="rgba(200,168,75,0.4)" stroke-width="1"/>
+  <path d="M${w-20},${h-20} Q${w-30},${h-28} ${w-20},${h-36}" fill="none" stroke="rgba(200,168,75,0.4)" stroke-width="1"/>
+</svg>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// APP STATE
+// ══════════════════════════════════════════════════════════
+var currentSpread = 1;
+var drawnCards = [];
+var allFlipped = false;
+var flippedCount = 0;
+var cardPool = [];
+
+var cardStage = document.getElementById('cardStage');
+var drawBtn = document.getElementById('drawBtn');
+var resetBtn = document.getElementById('resetBtn');
+var readingPanel = document.getElementById('readingPanel');
+var loadingIndicator = document.getElementById('loadingIndicator');
+var cardsReading = document.getElementById('cardsReading');
+var overallBlock = document.getElementById('overallBlock');
+var overallText = document.getElementById('overallText');
+
+// Spread selector
+var spreadBtns = document.querySelectorAll('.spread-btn');
+for (var sbi = 0; sbi < spreadBtns.length; sbi++) {
+  (function(btn) {
+    btn.addEventListener('click', function() {
+      for (var j = 0; j < spreadBtns.length; j++) spreadBtns[j].classList.remove('active');
+      btn.classList.add('active');
+      currentSpread = parseInt(btn.dataset.spread);
+      recordTelemetrySpread(currentSpread);
+      startNewGame();
+    });
+  })(spreadBtns[sbi]);
+}
+
+// Build card slots
+function buildCardSlots() {
+  cardStage.innerHTML = '';
+  var labels = SPREAD_LABELS[currentSpread];
+  for (var i = 0; i < currentSpread; i++) {
+    var col = document.createElement('div');
+    col.className = 'card-slot';
+    var slotLabel = document.createElement('span');
+    slotLabel.className = 'slot-label';
+    slotLabel.textContent = labels[i];
+    col.appendChild(slotLabel);
+    var card = document.createElement('div');
+    card.className = 'tarot-card';
+    card.style.animationDelay = (i * 0.15) + 's';
+    var flipper = document.createElement('div');
+    flipper.className = 'card-flipper';
+    var back = document.createElement('div');
+    back.className = 'card-back';
+    back.innerHTML = cardBackSVG(200, 345);
+    var face = document.createElement('div');
+    face.className = 'card-face';
+    face.id = 'face_' + i;
+    flipper.appendChild(back);
+    flipper.appendChild(face);
+    card.appendChild(flipper);
+    var hint = document.createElement('div');
+    hint.className = 'card-hint';
+    hint.textContent = 'tap to draw';
+    hint.id = 'hint_' + i;
+    col.appendChild(card);
+    col.appendChild(hint);
+    cardStage.appendChild(col);
+  }
+  // Init pool and wire up card clicks
+  cardPool = MAJOR_ARCANA.slice();
+  drawnCards = new Array(currentSpread);
+  flippedCount = 0;
+  allFlipped = false;
+  setupCardClicks();
+}
+
+// Setup card click listeners
+function setupCardClicks() {
+  var cards = document.querySelectorAll('.tarot-card');
+  for (var ci = 0; ci < cards.length; ci++) {
+    (function(cardEl, idx) {
+      function onCardClick() {
+        if (cardEl.classList.contains('flipped')) return;
+        cardEl.removeEventListener('click', onCardClick);
+        drawOneCard(cardEl, idx);
+        document.body.focus();
+      }
+      cardEl.addEventListener('click', onCardClick);
+    })(cards[ci], ci);
+  }
+}
+
+// Draw one card and reveal it (called on card-back click)
+function drawOneCard(cardEl, slotIdx) {
+  if (cardEl.classList.contains('flipped')) return;
+  if (cardPool.length === 0) return;
+
+  // Pick random from remaining pool
+  var idx = Math.floor(Math.random() * cardPool.length);
+  var card = Object.assign({}, cardPool[idx], { reversed: Math.random() < 0.3 });
+  cardPool.splice(idx, 1);
+  drawnCards[slotIdx] = card;
+
+  // Fill the face
+  var face = document.getElementById('face_' + slotIdx);
+  if (!face) return;
+  var svg = card.draw(200, 345);
+  var label = '<div class="card-label-front">' + card.name + (card.reversed ? ' ®' : '') + '</div>';
+  face.innerHTML = svg + label;
+  if (card.reversed) face.classList.add('reversed');
+  dlog('Slot ' + slotIdx + ' -> ' + card.name + (card.reversed?' (rev)':''), 'ok');
+  recordTelemetryCard(card.name, card.reversed);
+
+  // Flip
+  cardEl.classList.add('flipped');
+  var hint = document.getElementById('hint_' + slotIdx);
+  if (hint) hint.style.opacity = '0';
+  flippedCount++;
+
+  if (flippedCount === currentSpread) {
+    allFlipped = true;
+    dlog('All cards flipped: ' + drawnCards.map(function(c){return c.name;}).join(', '), 'ok');
+    sendTelemetry('reading_complete');
+    _telemetrySent = false; // allow re-send on pagehide
+    fetchReading();
+  }
+}
+
+
+// draw button removed - cards drawn by clicking card back
+
+function startNewGame() {
+  drawnCards = [];
+  allFlipped = false;
+  flippedCount = 0;
+  readingPanel.classList.remove('visible');
+  cardsReading.innerHTML = '';
+  overallBlock.style.display = 'none';
+  loadingIndicator.classList.remove('show');
+  buildCardSlots();
+  dlog('New game started, spread=' + currentSpread, 'info');
+}
+
+resetBtn.addEventListener('click', function() { startNewGame(); });
+
+// ══════════════════════════════════════════════════════════
+// AI READING via Anthropic API
+// ══════════════════════════════════════════════════════════
+function fetchReading() {
+  dlog('Fetching AI reading...', 'info');
+  dlog('Origin: ' + location.origin + ' | Protocol: ' + location.protocol, 'info');
+  readingPanel.classList.add('visible');
+  loadingIndicator.classList.add('show');
+  cardsReading.innerHTML = '';
+  overallBlock.style.display = 'none';
+
+  var labels = SPREAD_LABELS[currentSpread];
+  var cardsDesc = drawnCards.map(function(c, i) {
+    return labels[i] + ': ' + c.name + (c.reversed ? ' (Reversed)' : '') + ' — Keywords: ' + c.keywords.join(', ');
+  }).join('\n');
+  var spreadName = {1:'Single Card',3:'Past-Present-Future',5:'5-Card Celtic Cross'}[currentSpread];
+
+  var prompt = 'You are a wise, poetic Tarot oracle. A seeker has drawn these cards in a ' + spreadName + ' spread:\n\n' + cardsDesc + '\n\nPlease provide:\n1. For each card position, write a flowing 3-4 sentence interpretation (label with position name and card name)\n2. A "Overall Message" paragraph (4-5 sentences) synthesizing the whole spread into guidance\n\nFormat your response as JSON exactly like this (no markdown fences):\n{\n  "cards": [\n    {"position": "Past", "name": "The Fool", "reading": "..."},\n    ...\n  ],\n  "overall": "..."\n}';
+
+  // Anthropic API is blocked by CORS on hosted pages — use fallback directly when not on claude.ai
+  var onClaude = location.hostname === 'claude.ai' || location.hostname.indexOf('claude') !== -1;
+  if (!onClaude) {
+    dlog('CORS note: Anthropic API not available from ' + location.hostname + ' — using built-in oracle readings', 'warn');
+    loadingIndicator.classList.remove('show');
+    renderReading(generateFallbackReading());
+    return;
+  }
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+  .then(function(response) {
+    if (!response.ok) {
+      dlog('API HTTP error: ' + response.status + ' ' + response.statusText, 'error');
+      throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+    }
+    return response.json();
+  })
+  .then(function(data) {
+    dlog('API response received. Type: ' + (data && data.type) + ' | Content blocks: ' + (data && data.content ? data.content.length : 0), 'ok');
+    if (data && data.error) {
+      dlog('API error body: ' + JSON.stringify(data.error), 'error');
+      throw new Error(data.error.message || 'API error');
+    }
+    var rawContent = (data && data.content) ? data.content : [];
+    var text = rawContent.map(function(b){ return b.text || ''; }).join('') || '';
+    var clean = text.replace(/```json|```/g, '').trim();
+    var parsed = null;
+    try {
+      parsed = JSON.parse(clean);
+      dlog('JSON parsed OK — ' + (parsed.cards ? parsed.cards.length : 0) + ' card(s)', 'ok');
+    } catch(pe) {
+      dlog('JSON parse failed: ' + pe.message + ' | raw preview: ' + clean.substring(0, 120), 'warn');
+    }
+    loadingIndicator.classList.remove('show');
+    if (parsed && parsed.cards) {
+      renderReading(parsed);
+    } else {
+      dlog('Falling back to built-in readings (empty/unparseable API response)', 'warn');
+      renderReading(generateFallbackReading());
+    }
+  })
+  .catch(function(err) {
+    var isCors = err.message === 'Load failed' || err.message === 'Failed to fetch' || err.message.indexOf('NetworkError') !== -1;
+    dlog('API fetch error: ' + err.message + (isCors ? ' (likely CORS block — API not accessible from ' + location.hostname + ')' : '') + (err.stack ? ' | ' + err.stack.split('\n')[0] : ''), 'error');
+    loadingIndicator.classList.remove('show');
+    dlog('Using built-in oracle readings instead', 'warn');
+    renderReading(generateFallbackReading());
+  });
+}
+
+function generateFallbackReading() {
+  var labels = SPREAD_LABELS[currentSpread];
+  var baseReadings = {
+    'The Fool': 'A new chapter beckons with open arms. The universe invites you to leap without overthinking, trusting that the path will reveal itself beneath your feet. Release your attachment to outcomes and embrace the magic of pure potential. This moment calls for courage, playfulness, and an open heart.',
+    'The Magician': 'All the tools you need are already in your hands. This is a time of tremendous personal power — your will, your words, your attention can shape reality itself. Channel your focus with intention and watch as the world responds to your clarity. You are the architect of your own transformation.',
+    'The High Priestess': 'The answers you seek lie not in the outer world but in the silent depths within. Trust the whispers of your intuition above the noise of logic and external opinion. A deeper truth is making itself known, available only to those who pause, listen, and look inward. Honor what you know beyond words.',
+    'The Empress': 'You are invited into a season of abundance, creativity, and natural flourishing. Let yourself receive the nourishment you have earned — both material and emotional. Your capacity to nurture others is a gift, but remember to first tend the garden of your own heart. Growth happens in conditions of love.',
+    'The Emperor': 'Structure, discipline, and clear boundaries are your allies now. This is a time to build with intention, to lead from a place of grounded authority, and to honor the responsibilities you carry. Stability does not come from controlling others but from the firm ground you create within yourself.',
+    'The Hierophant': 'Ancient wisdom calls to you — through tradition, mentorship, or a return to principles that have stood the test of time. You may find guidance within established frameworks, or you may be called to share your own wisdom with others. There is power in ceremony, in belonging, in the rites that connect us.',
+    'The Lovers': 'A significant choice stands before you, and with it comes the opportunity for deep alignment with your truest values. Whether in matters of the heart or in paths of life, choose from love rather than fear. Connection — with another, with your purpose, with yourself — is the heart of this moment.',
+    'The Chariot': 'Victory is within reach when you harness opposing forces and drive them forward with unified will. The obstacles before you are not walls but questions: how badly do you want this? Assert yourself with discipline and determination. The path forward requires you to take the reins.',
+    'Strength': 'True power wears the face of compassion. What you might tame by force, you can transform with patience and gentle presence. Your courage right now is not the roar but the quiet certainty that you can face whatever comes. Let love be the strength that opens what force would close.',
+    'The Hermit': 'A period of sacred solitude calls you inward. The lantern you carry illuminates only the next step — and that is enough. Seek wisdom not from the crowd but from the still voice that speaks in silence. This withdrawal from the world is not retreat; it is preparation.',
+    'Wheel of Fortune': 'The great wheel turns, and with it comes change you did not plan and could not prevent. Accept the cycles of fortune with equanimity — what rises will fall, what falls will rise again. You are not the wheel; you are the awareness watching it turn. Remain centered as the world shifts around you.',
+    'Justice': 'Truth is the most powerful force in the universe, and right now it demands your honesty — with yourself most of all. The scales are balanced by your own hand: every choice carries consequence, every cause its effect. Act from integrity, and what returns to you will be worthy of who you are.',
+    'The Hanged Man': 'Surrender is not defeat; it is the highest form of trust. By releasing your grip on how things should go, you open yourself to seeing from an entirely new angle. This pause, this waiting, this turning of the world upside down — it is preparation for a profound shift in understanding.',
+    'Death': 'Something must end so something greater can begin. Do not cling to what the current is carrying away — it has served its purpose, and the space it leaves is sacred. Transformation is rarely comfortable, but it is always purposeful. You are being remade, even now.',
+    'Temperance': 'The art of this moment is balance — not the sterile balance of avoidance, but the dynamic flow of integration. Mix patience with action, vision with practicality, silence with expression. The angel pours between vessels without spilling a drop: you too can hold many truths at once.',
+    'The Devil': 'What chains you is not as immovable as it seems. Examine the bonds you believe are inescapable — you may find they are far looser than you thought. Shadow work calls: look honestly at the patterns, cravings, and fears that have kept you cycling in the same place. Freedom begins with unflinching self-knowledge.',
+    'The Tower': 'What is falling was never truly stable. The lightning of truth strikes at structures built on false foundations, and though the collapse is frightening, it clears the ground for something real. This disruption is not punishment — it is liberation. Let what must fall, fall.',
+    'The Star': 'After the storm comes the star-lit sky, and with it — hope. You are being called back to your deepest self, to the quiet certainty that life is moving toward something beautiful. Trust the inspiration that rises within you. Your wishes, whispered to the cosmos, are heard.',
+    'The Moon': 'You are moving through the mysterious territory between what is real and what is imagined. Fear and intuition look alike in the dark — so proceed slowly, trust your instincts, and do not var anxiety paint illusions on the wall. The path through uncertainty is made by walking it.',
+    'The Sun': 'Joy is not a reward you must earn — it is your birthright. This is a time of illumination, of seeing clearly, of feeling the warmth of life in full radiance. Whatever you create now carries the light of genuine vitality. Let yourself be happy, wholeheartedly and without apology.',
+    'Judgement': 'A call is ringing out across your life — a summons to rise, to be seen, to answer at last for who you truly are. This is a moment of reckoning not with guilt, but with destiny. Let go of the past self who no longer serves you and step forward, reborn.',
+    'The World': 'You have arrived. Not at an end, but at a completion — a moment of wholeness, integration, and earned celebration. The work of this cycle is done, and the world opens its arms to you. Take a breath and honor how far you have come before the next great spiral begins.'
+  };
+
+  var labels = SPREAD_LABELS[currentSpread];
+  return {
+    cards: drawnCards.map((c, i) => ({
+      position: labels[i],
+      name: c.name + (c.reversed ? ' (Reversed)' : ''),
+      reading: c.reversed
+        ? `The energy of ${c.name} is present but turned inward, or perhaps blocked. ` + baseReadings[c.name]
+        : baseReadings[c.name] || `The ${c.name} speaks of ${c.keywords.join(', ')}.`
+    })),
+    overall: `This spread reveals a journey of ${drawnCards.map(c=>c.name).join(', ')}. The cards speak together of transformation, awareness, and the unfolding of your unique path. Honor each card's message as a facet of the whole — together they illuminate the terrain of your present moment with remarkable clarity and compassion. Trust the wisdom that has come to you today.`
+  };
+}
+
+function renderReading(parsed) {
+  cardsReading.innerHTML = '';
+  for (var ri = 0; ri < parsed.cards.length; ri++) { (function(c, i) {
+    var card = drawnCards[i];
+    var block = document.createElement('div');
+    block.className = 'card-reading-block';
+    block.innerHTML = `
+      <span class="reading-position">✦ ${c.position}</span>
+      <div class="reading-card-name">${c.name}</div>
+      <div class="reading-keywords">
+        ${(card&&card.keywords?card.keywords:[]).map(function(k){return '<span class="kw-tag">'+k+'</span>';}).join('')}
+      </div>
+      <p class="reading-text">${c.reading}</p>`;
+    cardsReading.appendChild(block);
+  })(parsed.cards[ri], ri); }
+  if (parsed.overall) {
+    overallText.textContent = parsed.overall;
+    overallBlock.style.display = 'block';
+  }
+}
+
+
+// ── KEYBOARD: Space / Enter draws next unflipped card ──
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    if (allFlipped) return;
+    // Find first unflipped card
+    var cards = document.querySelectorAll('.tarot-card');
+    for (var ki = 0; ki < cards.length; ki++) {
+      if (!cards[ki].classList.contains('flipped')) {
+        cards[ki].click();
+        break;
+      }
+    }
+  }
+});
+
+// ── THEME SWITCHER ──
+var themeDots = document.querySelectorAll('.theme-dot');
+for (var ti = 0; ti < themeDots.length; ti++) {
+  (function(dot) {
+    dot.addEventListener('click', function() {
+      var t = dot.getAttribute('data-t');
+      for (var j = 0; j < themeDots.length; j++) themeDots[j].classList.remove('active');
+      dot.classList.add('active');
+      // dusk = default (no attribute), others set data-theme
+      if (t === 'dusk') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      dlog('Theme: ' + t, 'info');
+    });
+  })(themeDots[ti]);
+}
+
+
+// ══════════════════════════════════════════════════════════
+// TELEMETRY — posts session data as GitHub Issue
+// ══════════════════════════════════════════════════════════
+var _sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+var _sessionStart = Date.now();
+var _sessionCards = [];
+var _sessionSpreads = [];
+var _telemetrySent = false;
+
+// Collect geo (IP-based, no permission needed)
+var _geo = { country: '?', city: '?', ip: '?' };
+(function fetchGeo() {
+  try {
+    fetch('https://ipapi.co/json/')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        _geo = { country: d.country_name || '?', city: d.city || '?', ip: d.ip || '?' };
+        dlog('Geo: ' + _geo.city + ', ' + _geo.country, 'info');
+      })
+      .catch(function() {});
+  } catch(e) {}
+})();
+
+function recordTelemetryCard(cardName, reversed) {
+  _sessionCards.push({ card: cardName, reversed: reversed, t: Date.now() - _sessionStart });
+}
+
+function recordTelemetrySpread(spread) {
+  _sessionSpreads.push({ spread: spread, t: Date.now() - _sessionStart });
+}
+
+function sendTelemetry(trigger) {
+  if (_telemetrySent) return;
+  _telemetrySent = true;
+  var duration = Math.round((Date.now() - _sessionStart) / 1000);
+  var ua = navigator.userAgent;
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+  var isIOS = /iPhone|iPad|iPod/i.test(ua);
+  var body = {
+    session: _sessionId,
+    trigger: trigger,
+    duration_sec: duration,
+    spread_type: currentSpread,
+    spreads_played: _sessionSpreads,
+    cards_drawn: _sessionCards,
+    geo: _geo,
+    device: {
+      mobile: isMobile,
+      ios: isIOS,
+      screen: window.screen.width + 'x' + window.screen.height,
+      lang: navigator.language,
+      ua: ua.substring(0, 120)
+    },
+    timestamp: new Date().toISOString()
+  };
+
+  var title = '[Tarot] ' + new Date().toISOString().slice(0,16).replace('T',' ') + ' | ' + _geo.city + ', ' + _geo.country + ' | ' + (isMobile ? 'Mobile':'Desktop') + ' | ' + duration + 's';
+  var issueBody = '```json\n' + JSON.stringify(body, null, 2) + '\n```';
+
+  // GitHub Issues API — replace GITHUB_TOKEN with your PAT (issues:write scope)
+  var REPO = 'a-tsygankov/apps';
+  var TOKEN = 'GITHUB_TOKEN_PLACEHOLDER';
+
+  if (TOKEN === 'GITHUB_TOKEN_PLACEHOLDER') {
+    dlog('Telemetry: no token set, skipping', 'warn');
+    return;
+  }
+
+  fetch('https://api.github.com/repos/' + REPO + '/issues', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + TOKEN,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    },
+    body: JSON.stringify({
+      title: title,
+      body: issueBody,
+      labels: ['tarot-telemetry']
+    })
+  })
+  .then(function(r) { dlog('Telemetry sent (HTTP ' + r.status + ')', r.ok ? 'ok' : 'warn'); })
+  .catch(function(e) { dlog('Telemetry failed: ' + e.message, 'warn'); });
+}
+
+// Send on page hide (tab close, navigate away) and after reading completes
+window.addEventListener('pagehide', function() { sendTelemetry('pagehide'); });
+window.addEventListener('beforeunload', function() { sendTelemetry('beforeunload'); });
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+buildCardSlots();
+</script>
+</body>
+</html>
