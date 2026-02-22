@@ -7,27 +7,86 @@
 <title>Tarot Oracle</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
 <style>
+/* ── DEFAULT: DUSK (softer, easier on eyes) ── */
 :root {
-  --ink: #0c0810;
+  --ink: #1a1520;
   --parchment: #f2e8d0;
-  --gold: #c8a84b;
-  --gold-bright: #e8c96a;
-  --gold-dim: #7a6428;
+  --gold: #b8963e;
+  --gold-bright: #d4a94a;
+  --gold-dim: #6a5525;
   --crimson: #8b1a2a;
-  --midnight: #0d0a1a;
-  --deep-violet: #1a0d30;
-  --violet-mid: #2e1458;
-  --amethyst: #6b3fa0;
-  --silver: #a8afc0;
-  --cream: #ede0c0;
-  --card-dark: #100820;
+  --midnight: #1e1828;
+  --deep-violet: #2a1f3d;
+  --violet-mid: #3d2a60;
+  --amethyst: #7a55b0;
+  --silver: #9098b0;
+  --cream: #d8cdb0;
+  --card-dark: #1c1428;
+  --bg-primary: #1e1828;
+  --bg-card: #241c38;
+  --text-body: #c8bda0;
+  --border-subtle: rgba(184,150,62,0.2);
+}
+
+/* ── THEME: MIDNIGHT (original dark) ── */
+[data-theme=“midnight”] {
+–midnight: #0d0a1a;
+–deep-violet: #1a0d30;
+–violet-mid: #2e1458;
+–amethyst: #6b3fa0;
+–silver: #a8afc0;
+–cream: #ede0c0;
+–card-dark: #100820;
+–bg-primary: #0d0a1a;
+–bg-card: #120820;
+–text-body: #ddd0b8;
+–border-subtle: rgba(200,168,75,0.25);
+–gold: #c8a84b;
+–gold-bright: #e8c96a;
+–gold-dim: #7a6428;
+}
+
+/* ── THEME: PARCHMENT (light warm) ── */
+[data-theme=“parchment”] {
+–midnight: #f5ede0;
+–deep-violet: #e8dcc8;
+–violet-mid: #ddd0b8;
+–amethyst: #7a5535;
+–silver: #6a5545;
+–cream: #3a2a18;
+–card-dark: #e8dcc8;
+–bg-primary: #f5ede0;
+–bg-card: #ede0c8;
+–text-body: #3a2a18;
+–border-subtle: rgba(100,70,30,0.25);
+–gold: #8a6020;
+–gold-bright: #a07830;
+–gold-dim: #c0a870;
+}
+
+/* ── THEME: FOREST (deep green) ── */
+[data-theme=“forest”] {
+–midnight: #0e1a14;
+–deep-violet: #162210;
+–violet-mid: #1e3018;
+–amethyst: #4a8050;
+–silver: #90a898;
+–cream: #d0e0c8;
+–card-dark: #121e14;
+–bg-primary: #0e1a14;
+–bg-card: #162210;
+–text-body: #c0d8b8;
+–border-subtle: rgba(100,180,80,0.2);
+–gold: #90b840;
+–gold-bright: #a8d050;
+–gold-dim: #507025;
 }
 
 - { margin:0; padding:0; box-sizing:border-box; }
 
 html, body {
 height: 100%;
-background: var(–midnight);
+background: var(–bg-primary, var(–midnight));
 color: var(–cream);
 font-family: ‘Cormorant Garamond’, serif;
 overflow-x: hidden;
@@ -334,7 +393,7 @@ margin-bottom: 32px;
 }
 
 .card-reading-block {
-background: linear-gradient(145deg, rgba(26,13,48,0.85), rgba(16,8,32,0.9));
+background: var(–bg-card, linear-gradient(145deg, rgba(26,13,48,0.85), rgba(16,8,32,0.9)));
 border: 1px solid rgba(200,168,75,0.25);
 border-radius: 8px;
 padding: 24px;
@@ -469,7 +528,7 @@ animation: fadeInOut 1.5s ease-in-out infinite;
 
 /* Reset button */
 .reset-btn {
-display: none;
+display: inline-block;
 font-family: ‘Cinzel’, serif;
 font-size: 0.7rem;
 letter-spacing: 0.3em;
@@ -484,6 +543,7 @@ transition: all 0.3s;
 margin: 16px auto 0;
 }
 .reset-btn:hover { border-color: var(–gold); color: var(–gold); }
+.draw-section { padding: 8px 20px 20px; text-align: center; }
 .reset-btn.show { display: inline-block; }
 
 /* Card name on front */
@@ -500,6 +560,38 @@ color: var(–gold);
 text-transform: uppercase;
 z-index: 10;
 }
+
+/* ── THEME SWITCHER ── */
+.theme-bar {
+display: flex;
+gap: 6px;
+justify-content: center;
+padding: 0 20px 16px;
+align-items: center;
+}
+.theme-bar-label {
+font-family: ‘Cinzel’, serif;
+font-size: 0.6rem;
+letter-spacing: 0.2em;
+color: var(–silver);
+text-transform: uppercase;
+opacity: 0.6;
+margin-right: 4px;
+}
+.theme-dot {
+width: 22px; height: 22px;
+border-radius: 50%;
+border: 2px solid transparent;
+cursor: pointer;
+transition: transform 0.2s, border-color 0.2s;
+position: relative;
+}
+.theme-dot:hover { transform: scale(1.2); }
+.theme-dot.active { border-color: var(–gold); }
+.theme-dot[data-t=“dusk”]      { background: radial-gradient(circle, #2e2448, #1e1828); }
+.theme-dot[data-t=“midnight”]  { background: radial-gradient(circle, #2e1458, #0d0a1a); }
+.theme-dot[data-t=“parchment”] { background: radial-gradient(circle, #e8dcc8, #f5ede0); }
+.theme-dot[data-t=“forest”]    { background: radial-gradient(circle, #1e3018, #0e1a14); }
 
 /* scrollbar */
 ::-webkit-scrollbar { width: 6px; }
@@ -588,6 +680,18 @@ text-align: center;
 z-index: 10000;
 pointer-events: none;
 }
+
+/* Parchment theme overrides for readability */
+[data-theme=“parchment”] .slot-label,
+[data-theme=“parchment”] .reading-divider-text,
+[data-theme=“parchment”] .spread-btn { color: var(–silver); }
+[data-theme=“parchment”] body { background: var(–midnight); color: var(–cream); }
+[data-theme=“parchment”] .card-reading-block { background: rgba(210,195,170,0.85); }
+[data-theme=“parchment”] .reading-text { color: #3a2a18; }
+[data-theme=“parchment”] .overall-block { background: rgba(200,180,150,0.5); }
+[data-theme=“parchment”] #bg-canvas { opacity: 0.3; }
+
+[data-theme=“forest”] #bg-canvas { filter: hue-rotate(120deg); }
 </style>
 
 </head>
@@ -613,11 +717,18 @@ pointer-events: none;
     <button class="spread-btn" data-spread="5">Celtic Cross (5)</button>
   </div>
 
+  <p style="text-align:center;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--silver);opacity:0.55;padding:0 20px 8px;text-transform:uppercase;">Tap a card · Space or Enter for next</p>
+  <div class="theme-bar">
+    <span class="theme-bar-label">Theme</span>
+    <span class="theme-dot active" data-t="dusk"     title="Dusk"></span>
+    <span class="theme-dot"        data-t="midnight"  title="Midnight"></span>
+    <span class="theme-dot"        data-t="parchment" title="Parchment"></span>
+    <span class="theme-dot"        data-t="forest"    title="Forest"></span>
+  </div>
+
   <div class="card-stage" id="cardStage"></div>
 
   <div class="draw-section">
-    <button class="draw-btn" id="drawBtn">✦ Draw the Cards ✦</button>
-    <br>
     <button class="reset-btn" id="resetBtn">↺ New Reading</button>
   </div>
 
@@ -1675,6 +1786,8 @@ function cardBackSVG(w,h) {
 var currentSpread = 1;
 var drawnCards = [];
 var allFlipped = false;
+var flippedCount = 0;
+var cardPool = [];
 
 var cardStage = document.getElementById('cardStage');
 var drawBtn = document.getElementById('drawBtn');
@@ -1686,15 +1799,17 @@ var overallBlock = document.getElementById('overallBlock');
 var overallText = document.getElementById('overallText');
 
 // Spread selector
-document.querySelectorAll('.spread-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (allFlipped) return;
-    document.querySelectorAll('.spread-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentSpread = parseInt(btn.dataset.spread);
-    buildCardSlots();
-  });
-});
+var spreadBtns = document.querySelectorAll('.spread-btn');
+for (var sbi = 0; sbi < spreadBtns.length; sbi++) {
+  (function(btn) {
+    btn.addEventListener('click', function() {
+      for (var j = 0; j < spreadBtns.length; j++) spreadBtns[j].classList.remove('active');
+      btn.classList.add('active');
+      currentSpread = parseInt(btn.dataset.spread);
+      startNewGame();
+    });
+  })(spreadBtns[sbi]);
+}
 
 // Build card slots
 function buildCardSlots() {
@@ -1723,90 +1838,85 @@ function buildCardSlots() {
     card.appendChild(flipper);
     var hint = document.createElement('div');
     hint.className = 'card-hint';
-    hint.textContent = 'click to reveal';
+    hint.textContent = 'tap to draw';
     hint.id = 'hint_' + i;
     col.appendChild(card);
     col.appendChild(hint);
     cardStage.appendChild(col);
   }
+  // Init pool and wire up card clicks
+  cardPool = MAJOR_ARCANA.slice();
+  drawnCards = new Array(currentSpread);
+  flippedCount = 0;
+  allFlipped = false;
+  setupCardClicks();
 }
 
-// Draw cards
-function drawCards() {
-  var pool = [...MAJOR_ARCANA];
-  drawnCards = [];
-  for (var i = 0; i < currentSpread; i++) {
-    var idx = Math.floor(Math.random() * pool.length);
-    var card = Object.assign({}, pool[idx], { reversed: Math.random() < 0.3 });
-    drawnCards.push(card);
-    pool.splice(idx, 1);
-  }
-
-  dlog('Cards drawn: ' + drawnCards.map(function(c){return c.name;}).join(', '), 'ok');
-  // Fill card faces
-  for (var fi = 0; fi < drawnCards.length; fi++) {
-    (function(card, i) {
-      var face = document.getElementById('face_' + i);
-      if (!face) return;
-      var svg = card.draw(200, 345);
-      var label = '<div class="card-label-front">' + card.name + (card.reversed ? ' ®' : '') + '</div>';
-      face.innerHTML = svg + label;
-      dlog('Card ' + i + ' rendered: ' + card.name + (card.reversed?' (rev)':''), 'ok');
-      if (card.reversed) {
-        face.classList.add('reversed');
-      }
-    })(drawnCards[fi], fi);
-  }
-
-  // Set up individual card click to flip + build reading
-  var flippedCount = 0;
+// Setup card click listeners
+function setupCardClicks() {
   var cards = document.querySelectorAll('.tarot-card');
   for (var ci = 0; ci < cards.length; ci++) {
     (function(cardEl, idx) {
       function onCardClick() {
         if (cardEl.classList.contains('flipped')) return;
         cardEl.removeEventListener('click', onCardClick);
-        dlog('Card ' + idx + ' flipped', 'ok');
-        cardEl.classList.add('flipped');
-        var hint = document.getElementById('hint_' + idx);
-        if (hint) hint.style.opacity = '0';
-        flippedCount++;
-        if (flippedCount === currentSpread) {
-          allFlipped = true;
-          resetBtn.classList.add('show');
-          drawBtn.style.display = 'none';
-          fetchReading();
-        }
+        drawOneCard(cardEl, idx);
+        document.body.focus();
       }
       cardEl.addEventListener('click', onCardClick);
     })(cards[ci], ci);
   }
 }
 
-drawBtn.addEventListener('click', () => {
-  if (!drawnCards.length) {
-    dlog('Drawing ' + currentSpread + ' card(s)...', 'info');
-    drawCards();
-    drawBtn.textContent = '✦ Flip the Cards to Reveal ✦';
-    drawBtn.style.pointerEvents = 'none';
-    drawBtn.style.opacity = '0.6';
-  }
-});
+// Draw one card and reveal it (called on card-back click)
+function drawOneCard(cardEl, slotIdx) {
+  if (cardEl.classList.contains('flipped')) return;
+  if (cardPool.length === 0) return;
 
-resetBtn.addEventListener('click', () => {
+  // Pick random from remaining pool
+  var idx = Math.floor(Math.random() * cardPool.length);
+  var card = Object.assign({}, cardPool[idx], { reversed: Math.random() < 0.3 });
+  cardPool.splice(idx, 1);
+  drawnCards[slotIdx] = card;
+
+  // Fill the face
+  var face = document.getElementById('face_' + slotIdx);
+  if (!face) return;
+  var svg = card.draw(200, 345);
+  var label = '<div class="card-label-front">' + card.name + (card.reversed ? ' ®' : '') + '</div>';
+  face.innerHTML = svg + label;
+  if (card.reversed) face.classList.add('reversed');
+  dlog('Slot ' + slotIdx + ' -> ' + card.name + (card.reversed?' (rev)':''), 'ok');
+
+  // Flip
+  cardEl.classList.add('flipped');
+  var hint = document.getElementById('hint_' + slotIdx);
+  if (hint) hint.style.opacity = '0';
+  flippedCount++;
+
+  if (flippedCount === currentSpread) {
+    allFlipped = true;
+    dlog('All cards flipped: ' + drawnCards.map(function(c){return c.name;}).join(', '), 'ok');
+    fetchReading();
+  }
+}
+
+
+// draw button removed - cards drawn by clicking card back
+
+function startNewGame() {
   drawnCards = [];
   allFlipped = false;
-  resetBtn.classList.remove('show');
-  drawBtn.style.display = '';
-  drawBtn.style.pointerEvents = '';
-  drawBtn.style.opacity = '';
-  drawBtn.textContent = '✦ Draw the Cards ✦';
+  flippedCount = 0;
   readingPanel.classList.remove('visible');
   cardsReading.innerHTML = '';
   overallBlock.style.display = 'none';
   loadingIndicator.classList.remove('show');
   buildCardSlots();
-});
+  dlog('New game started, spread=' + currentSpread, 'info');
+}
+
+resetBtn.addEventListener('click', function() { startNewGame(); });
 
 // ══════════════════════════════════════════════════════════
 // AI READING via Anthropic API
@@ -1962,6 +2072,42 @@ function renderReading(parsed) {
     overallText.textContent = parsed.overall;
     overallBlock.style.display = 'block';
   }
+}
+
+
+// ── KEYBOARD: Space / Enter draws next unflipped card ──
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    if (allFlipped) return;
+    // Find first unflipped card
+    var cards = document.querySelectorAll('.tarot-card');
+    for (var ki = 0; ki < cards.length; ki++) {
+      if (!cards[ki].classList.contains('flipped')) {
+        cards[ki].click();
+        break;
+      }
+    }
+  }
+});
+
+// ── THEME SWITCHER ──
+var themeDots = document.querySelectorAll('.theme-dot');
+for (var ti = 0; ti < themeDots.length; ti++) {
+  (function(dot) {
+    dot.addEventListener('click', function() {
+      var t = dot.getAttribute('data-t');
+      for (var j = 0; j < themeDots.length; j++) themeDots[j].classList.remove('active');
+      dot.classList.add('active');
+      // dusk = default (no attribute), others set data-theme
+      if (t === 'dusk') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      dlog('Theme: ' + t, 'info');
+    });
+  })(themeDots[ti]);
 }
 
 // ══════════════════════════════════════════════════════════
