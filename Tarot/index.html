@@ -831,8 +831,7 @@ function clearDebug() {
   });
 })();
 
-var APP_VERSION = 'v1-11';
-console.log('Tarot Oracle ' + APP_VERSION);
+var APP_VERSION = 'v1-12';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -1941,14 +1940,9 @@ function fetchReading() {
 
   var prompt = 'You are a wise, poetic Tarot oracle. A seeker has drawn these cards in a ' + spreadName + ' spread:\n\n' + cardsDesc + '\n\nPlease provide:\n1. For each card position, write a flowing 3-4 sentence interpretation (label with position name and card name)\n2. A "Overall Message" paragraph (4-5 sentences) synthesizing the whole spread into guidance\n\nFormat your response as JSON exactly like this (no markdown fences):\n{\n  "cards": [\n    {"position": "Past", "name": "The Fool", "reading": "..."},\n    ...\n  ],\n  "overall": "..."\n}';
 
-  // Anthropic API is blocked by CORS on hosted pages — use fallback directly when not on claude.ai
-  var onClaude = location.hostname === 'claude.ai' || location.hostname.indexOf('claude') !== -1;
-  if (!onClaude) {
-    dlog('CORS note: Anthropic API not available from ' + location.hostname + ' — using built-in oracle readings', 'warn');
-    loadingIndicator.classList.remove('show');
-    renderReading(generateFallbackReading());
-    return;
-  }
+  // Always attempt the API — it works when Claude chat provides fetch permissions,
+  // and falls back gracefully on CORS/network failure (e.g. GitHub Pages)
+  dlog('Attempting API call from: ' + location.hostname, 'info');
 
   fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
