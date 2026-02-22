@@ -857,7 +857,7 @@ function clearDebug() {
   });
 })();
 
-var APP_VERSION = 'v1-13';
+var APP_VERSION = 'v1-14';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -2046,39 +2046,66 @@ function fetchReading() {
 }
 
 function fetchGemini(prompt, fallbackFn) {
-  dlog('Attempting Gemini API...', 'info');
+  // Try models in order: 1.5-flash (generous free tier) -> 1.5-flash-8b (lightest) -> fallback
+  var models = ['gemini-1.5-flash', 'gemini-1.5-flash-8b'];
   var key = _gk();
-  var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.85, maxOutputTokens: 1200 }
-    })
-  })
-  .then(function(r) {
-    if (!r.ok) throw new Error('Gemini HTTP ' + r.status + ' ' + r.statusText);
-    return r.json();
-  })
-  .then(function(data) {
-    if (data && data.error) throw new Error('Gemini: ' + (data.error.message || 'API error'));
-    var text = '';
-    try {
-      text = data.candidates[0].content.parts[0].text || '';
-    } catch(e) {
-      throw new Error('Gemini response parse: ' + e.message);
+
+  function tryModel(modelIdx) {
+    if (modelIdx >= models.length) {
+      dlog('All Gemini models exhausted — using built-in readings', 'error');
+      loadingIndicator.classList.remove('show');
+      renderReading(fallbackFn());
+      return;
     }
-    dlog('Gemini OK — ' + text.length + ' chars', 'ok');
-    // Wrap in fake Anthropic structure for handleApiSuccess
-    var fakeData = { content: [{ text: text }] };
-    handleApiSuccess(fakeData, fallbackFn);
-  })
-  .catch(function(err) {
-    dlog('Gemini failed: ' + err.message + ' — using built-in readings', 'error');
-    loadingIndicator.classList.remove('show');
-    renderReading(fallbackFn());
-  });
+    var model = models[modelIdx];
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key;
+    dlog('Attempting Gemini ' + model + '...', 'info');
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.85, maxOutputTokens: 1200 }
+      })
+    })
+    .then(function(r) {
+      if (r.status === 429) {
+        return r.json().then(function(body) {
+          var retryAfter = (body && body.error && body.error.details) ? JSON.stringify(body.error.details) : '';
+          dlog('Gemini ' + model + ' rate limited (429)' + (retryAfter ? ' | ' + retryAfter.substring(0,80) : '') + ' — trying next model', 'warn');
+          tryModel(modelIdx + 1);
+        }).catch(function() {
+          dlog('Gemini ' + model + ' rate limited (429) — trying next model', 'warn');
+          tryModel(modelIdx + 1);
+        });
+      }
+      if (!r.ok) {
+        return r.text().then(function(body) {
+          dlog('Gemini ' + model + ' HTTP ' + r.status + ' | ' + body.substring(0, 120), 'error');
+          tryModel(modelIdx + 1);
+        });
+      }
+      return r.json().then(function(data) {
+        if (data && data.error) {
+          dlog('Gemini ' + model + ' error: ' + (data.error.message || 'unknown') + ' code=' + (data.error.code || '?'), 'error');
+          tryModel(modelIdx + 1);
+          return;
+        }
+        var text = '';
+        try { text = data.candidates[0].content.parts[0].text || ''; }
+        catch(e) { dlog('Gemini ' + model + ' parse error: ' + e.message, 'error'); tryModel(modelIdx + 1); return; }
+        dlog('Gemini ' + model + ' OK — ' + text.length + ' chars', 'ok');
+        var fakeData = { content: [{ text: text }] };
+        handleApiSuccess(fakeData, fallbackFn);
+      });
+    })
+    .catch(function(err) {
+      dlog('Gemini ' + model + ' network error: ' + err.message, 'error');
+      tryModel(modelIdx + 1);
+    });
+  }
+
+  tryModel(0);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2105,7 +2132,10 @@ function generateFallbackReading() {
     ? buildOverall(drawnCards, labels, altMode)
     : 'The cards speak together of transformation, awareness, and the unfolding of your unique path. Trust the wisdom that has come to you today.';
 
-  dlog('Fallback readings used (' + (altMode ? 'alt' : 'standard') + ')', 'info');
+  var readingsSource = altMode
+    ? (window.TAROT_READINGS_ALT ? 'alt-file' : (window.TAROT_READINGS_STD ? 'std-file(alt-missing)' : 'hardcoded'))
+    : (window.TAROT_READINGS_STD ? 'std-file' : 'hardcoded');
+  dlog('Fallback readings: source=' + readingsSource + ' | cards=' + Object.keys(readings||{}).length + ' | alt=' + altMode, 'info');
   return { cards: cards, overall: overall };
 }
 
@@ -2170,6 +2200,19 @@ for (var ti = 0; ti < themeDots.length; ti++) {
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
+
+// Log whether external reading files loaded successfully
+(function() {
+  var stdLoaded = typeof window.TAROT_READINGS_STD !== 'undefined' && Object.keys(window.TAROT_READINGS_STD).length > 0;
+  var altLoaded = typeof window.TAROT_READINGS_ALT !== 'undefined' && Object.keys(window.TAROT_READINGS_ALT).length > 0;
+  var stdFn    = typeof window.buildOverallSTD === 'function';
+  var altFn    = typeof window.buildOverallALT === 'function';
+  dlog('Readings: std=' + (stdLoaded ? 'OK('+Object.keys(window.TAROT_READINGS_STD||{}).length+' cards)' : 'MISSING')
+     + ' alt=' + (altLoaded ? 'OK' : 'MISSING')
+     + ' overallSTD=' + (stdFn ? 'OK' : 'MISSING')
+     + ' overallALT=' + (altFn ? 'OK' : 'MISSING'), stdLoaded ? 'ok' : 'error');
+})();
+
 buildCardSlots();
 </script>
 </body>
