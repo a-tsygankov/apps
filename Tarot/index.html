@@ -857,7 +857,7 @@ function clearDebug() {
   });
 })();
 
-var APP_VERSION = 'v1-14';
+var APP_VERSION = 'v1-15';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -2047,7 +2047,7 @@ function fetchReading() {
 
 function fetchGemini(prompt, fallbackFn) {
   // Try models in order: 1.5-flash (generous free tier) -> 1.5-flash-8b (lightest) -> fallback
-  var models = ['gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+  var models = ['gemini-2.0-flash-lite', 'gemini-2.0-flash'];
   var key = _gk();
 
   function tryModel(modelIdx) {
@@ -2058,7 +2058,7 @@ function fetchGemini(prompt, fallbackFn) {
       return;
     }
     var model = models[modelIdx];
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key;
+    var url = 'https://generativelanguage.googleapis.com/v1/models/' + model + ':generateContent?key=' + key;
     dlog('Attempting Gemini ' + model + '...', 'info');
     fetch(url, {
       method: 'POST',
