@@ -818,14 +818,24 @@ function clearDebug() {
   console.warn  = function() { _origWarn.apply(console,arguments);  dlog(Array.from(arguments).join(' '),'warn'); };
   console.log   = function() { _origLog.apply(console,arguments);   dlog(Array.from(arguments).join(' '),'log'); };
   window.addEventListener('error', function(e) {
-    dlog('UNCAUGHT: ' + e.message + ' @ line ' + e.lineno, 'error');
+    var detail = 'UNCAUGHT: ' + e.message
+      + ' | file: ' + (e.filename ? e.filename.split('/').pop() : '?')
+      + ' | line: ' + e.lineno + ':' + e.colno
+      + (e.error && e.error.stack ? ' | stack: ' + e.error.stack.split('\n').slice(0,2).join(' ') : '');
+    dlog(detail, 'error');
   });
   window.addEventListener('unhandledrejection', function(e) {
-    dlog('PROMISE: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)), 'error');
+    var msg = e.reason ? (e.reason.message || String(e.reason)) : 'unknown rejection';
+    var stack = e.reason && e.reason.stack ? ' | ' + e.reason.stack.split('\n').slice(0,2).join(' ') : '';
+    dlog('PROMISE REJECTED: ' + msg + stack, 'error');
   });
 })();
 
-dlog('App init. iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,60), 'info');
+var APP_VERSION = 'v1-11';
+console.log('Tarot Oracle ' + APP_VERSION);
+dlog('Version: ' + APP_VERSION, 'info');
+dlog('Host: ' + location.hostname + location.pathname, 'info');
+dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
 
 // ══════════════════════════════════════════════════════════
 // STARFIELD BACKGROUND
@@ -1915,96 +1925,78 @@ resetBtn.addEventListener('click', function() { startNewGame(); });
 // ══════════════════════════════════════════════════════════
 // AI READING via Anthropic API
 // ══════════════════════════════════════════════════════════
-async function fetchReading() {
+function fetchReading() {
   dlog('Fetching AI reading...', 'info');
+  dlog('Origin: ' + location.origin + ' | Protocol: ' + location.protocol, 'info');
   readingPanel.classList.add('visible');
   loadingIndicator.classList.add('show');
   cardsReading.innerHTML = '';
   overallBlock.style.display = 'none';
 
   var labels = SPREAD_LABELS[currentSpread];
-  var cardsDesc = drawnCards.map((c, i) =>
-    `${labels[i]}: ${c.name}${c.reversed ? ' (Reversed)' : ''} — Keywords: ${c.keywords.join(', ')}`
-  ).join('\n');
-
+  var cardsDesc = drawnCards.map(function(c, i) {
+    return labels[i] + ': ' + c.name + (c.reversed ? ' (Reversed)' : '') + ' — Keywords: ' + c.keywords.join(', ');
+  }).join('\n');
   var spreadName = {1:'Single Card',3:'Past-Present-Future',5:'5-Card Celtic Cross'}[currentSpread];
 
-  var prompt = `You are a wise, poetic Tarot oracle. A seeker has drawn these cards in a ${spreadName} spread:
+  var prompt = 'You are a wise, poetic Tarot oracle. A seeker has drawn these cards in a ' + spreadName + ' spread:\n\n' + cardsDesc + '\n\nPlease provide:\n1. For each card position, write a flowing 3-4 sentence interpretation (label with position name and card name)\n2. A "Overall Message" paragraph (4-5 sentences) synthesizing the whole spread into guidance\n\nFormat your response as JSON exactly like this (no markdown fences):\n{\n  "cards": [\n    {"position": "Past", "name": "The Fool", "reading": "..."},\n    ...\n  ],\n  "overall": "..."\n}';
 
-${cardsDesc}
-
-Please provide:
-1. For each card position, write a flowing 3-4 sentence interpretation (label with position name and card name)
-2. A "Overall Message" paragraph (4-5 sentences) synthesizing the whole spread into guidance
-
-Format your response as JSON exactly like this (no markdown fences):
-{
-  "cards": [
-    {"position": "Past", "name": "The Fool", "reading": "..."},
-    ...
-  ],
-  "overall": "..."
-}`;
-
-  try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    var data = await response.json();
-    dlog('API response received', 'ok');
-    var rawContent = (data && data.content) ? data.content : []; var text = rawContent.map(function(b){return b.text||'';}).join('') || '';
-
-    var parsed;
-    try {
-      // Strip any markdown fences if present
-      var clean = text.replace(/```json|```/g, '').trim();
-      parsed = JSON.parse(clean);
-      dlog('JSON parsed OK', 'ok');
-    } catch(pe2) {
-      dlog('JSON parse failed: '+pe2.message+' raw: '+clean.substring(0,100), 'warn');
-      // Fallback: show raw text
-      parsed = null;
-    }
-
+  // Anthropic API is blocked by CORS on hosted pages — use fallback directly when not on claude.ai
+  var onClaude = location.hostname === 'claude.ai' || location.hostname.indexOf('claude') !== -1;
+  if (!onClaude) {
+    dlog('CORS note: Anthropic API not available from ' + location.hostname + ' — using built-in oracle readings', 'warn');
     loadingIndicator.classList.remove('show');
-
-    if (parsed && parsed.cards) {
-      cardsReading.innerHTML = '';
-      parsed.cards.forEach((c, i) => {
-        var card = drawnCards[i];
-        var block = document.createElement('div');
-        block.className = 'card-reading-block';
-        block.innerHTML = `
-          <span class="reading-position">✦ ${c.position}</span>
-          <div class="reading-card-name">${c.name}${(card&&card.reversed)?' · Reversed':''}</div>
-          <div class="reading-keywords">
-            ${(card&&card.keywords?card.keywords:[]).map(function(k){return '<span class="kw-tag">'+k+'</span>';}).join('')}
-          </div>
-          <p class="reading-text">${c.reading}</p>`;
-        cardsReading.appendChild(block);
-      });
-
-      if (parsed.overall) {
-        overallText.textContent = parsed.overall;
-        overallBlock.style.display = 'block';
-      }
-    } else {
-      // Show raw text fallback
-      cardsReading.innerHTML = `<div class="card-reading-block"><p class="reading-text" style="font-style:normal;">${text.replace(/\n/g,'<br>')}</p></div>`;
-    }
-  } catch (err) {
-    dlog('API error: ' + err.message, 'error');
-    loadingIndicator.classList.remove('show');
-    var fallbackReadings = generateFallbackReading();
-    renderReading(fallbackReadings);
+    renderReading(generateFallbackReading());
+    return;
   }
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+  .then(function(response) {
+    if (!response.ok) {
+      dlog('API HTTP error: ' + response.status + ' ' + response.statusText, 'error');
+      throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+    }
+    return response.json();
+  })
+  .then(function(data) {
+    dlog('API response received. Type: ' + (data && data.type) + ' | Content blocks: ' + (data && data.content ? data.content.length : 0), 'ok');
+    if (data && data.error) {
+      dlog('API error body: ' + JSON.stringify(data.error), 'error');
+      throw new Error(data.error.message || 'API error');
+    }
+    var rawContent = (data && data.content) ? data.content : [];
+    var text = rawContent.map(function(b){ return b.text || ''; }).join('') || '';
+    var clean = text.replace(/```json|```/g, '').trim();
+    var parsed = null;
+    try {
+      parsed = JSON.parse(clean);
+      dlog('JSON parsed OK — ' + (parsed.cards ? parsed.cards.length : 0) + ' card(s)', 'ok');
+    } catch(pe) {
+      dlog('JSON parse failed: ' + pe.message + ' | raw preview: ' + clean.substring(0, 120), 'warn');
+    }
+    loadingIndicator.classList.remove('show');
+    if (parsed && parsed.cards) {
+      renderReading(parsed);
+    } else {
+      dlog('Falling back to built-in readings (empty/unparseable API response)', 'warn');
+      renderReading(generateFallbackReading());
+    }
+  })
+  .catch(function(err) {
+    var isCors = err.message === 'Load failed' || err.message === 'Failed to fetch' || err.message.indexOf('NetworkError') !== -1;
+    dlog('API fetch error: ' + err.message + (isCors ? ' (likely CORS block — API not accessible from ' + location.hostname + ')' : '') + (err.stack ? ' | ' + err.stack.split('\n')[0] : ''), 'error');
+    loadingIndicator.classList.remove('show');
+    dlog('Using built-in oracle readings instead', 'warn');
+    renderReading(generateFallbackReading());
+  });
 }
 
 function generateFallbackReading() {
@@ -2049,7 +2041,7 @@ function generateFallbackReading() {
 
 function renderReading(parsed) {
   cardsReading.innerHTML = '';
-  parsed.cards.forEach((c, i) => {
+  for (var ri = 0; ri < parsed.cards.length; ri++) { (function(c, i) {
     var card = drawnCards[i];
     var block = document.createElement('div');
     block.className = 'card-reading-block';
@@ -2061,7 +2053,7 @@ function renderReading(parsed) {
       </div>
       <p class="reading-text">${c.reading}</p>`;
     cardsReading.appendChild(block);
-  });
+  })(parsed.cards[ri], ri); }
   if (parsed.overall) {
     overallText.textContent = parsed.overall;
     overallBlock.style.display = 'block';
