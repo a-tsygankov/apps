@@ -857,7 +857,7 @@ function clearDebug() {
   });
 })();
 
-var APP_VERSION = 'v1-17';
+var APP_VERSION = 'v1-19';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -2047,7 +2047,7 @@ function fetchReading() {
 
 function fetchGemini(prompt, fallbackFn) {
   // Try models in order: 1.5-flash (generous free tier) -> 1.5-flash-8b (lightest) -> fallback
-  var models = ['gemini-2.0-flash-lite-001', 'gemini-2.0-flash-001', 'gemini-1.5-flash-001'];
+  var models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
   var key = _gk();
 
   function tryModel(modelIdx) {
@@ -2065,7 +2065,7 @@ function fetchGemini(prompt, fallbackFn) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.85, maxOutputTokens: 1200 }
+        generationConfig: { temperature: 0.85, maxOutputTokens: 3000 }
       })
     })
     .then(function(r) {
@@ -2094,7 +2094,12 @@ function fetchGemini(prompt, fallbackFn) {
         var text = '';
         try { text = data.candidates[0].content.parts[0].text || ''; }
         catch(e) { dlog('Gemini ' + model + ' parse error: ' + e.message, 'error'); tryModel(modelIdx + 1); return; }
-        dlog('Gemini ' + model + ' OK — ' + text.length + ' chars', 'ok');
+        var finishReason = '';
+        try { finishReason = data.candidates[0].finishReason || ''; } catch(e) {}
+        dlog('Gemini ' + model + ' OK — ' + text.length + ' chars | finish=' + finishReason, finishReason === 'MAX_TOKENS' ? 'warn' : 'ok');
+        if (finishReason === 'MAX_TOKENS') {
+          dlog('WARNING: Gemini response truncated (MAX_TOKENS) — JSON may be incomplete', 'warn');
+        }
         var fakeData = { content: [{ text: text }] };
         handleApiSuccess(fakeData, fallbackFn);
       });
