@@ -857,7 +857,7 @@ function clearDebug() {
   });
 })();
 
-var APP_VERSION = 'v1-15';
+var APP_VERSION = 'v1-17';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -2047,7 +2047,7 @@ function fetchReading() {
 
 function fetchGemini(prompt, fallbackFn) {
   // Try models in order: 1.5-flash (generous free tier) -> 1.5-flash-8b (lightest) -> fallback
-  var models = ['gemini-2.0-flash-lite', 'gemini-2.0-flash'];
+  var models = ['gemini-2.0-flash-lite-001', 'gemini-2.0-flash-001', 'gemini-1.5-flash-001'];
   var key = _gk();
 
   function tryModel(modelIdx) {
@@ -2200,6 +2200,21 @@ for (var ti = 0; ti < themeDots.length; ti++) {
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
+
+// ── Discover available Gemini models for this API key ──
+(function() {
+  var key = _gk();
+  fetch('https://generativelanguage.googleapis.com/v1/models?key=' + key)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { dlog('Gemini model list error: ' + data.error.message, 'error'); return; }
+      var models = (data.models || []).map(function(m) { return m.name; }).filter(function(n) {
+        return n.indexOf('flash') !== -1 || n.indexOf('pro') !== -1;
+      });
+      dlog('Gemini available models: ' + models.join(', '), 'info');
+    })
+    .catch(function(e) { dlog('Gemini model list fetch failed: ' + e.message, 'warn'); });
+})();
 
 // Log whether external reading files loaded successfully
 (function() {
