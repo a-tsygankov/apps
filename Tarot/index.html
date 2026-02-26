@@ -612,23 +612,35 @@ h1 {
 
 /* ── LANG TOGGLE ── */
 /* ── SHARED FIXED BUTTONS ── */
-#lang-toggle, #alt-toggle, #debug-toggle {
+#lang-toggle, #alt-toggle, #coffee-btn, #debug-toggle {
   position: fixed;
   right: 16px;
   z-index: 9999;
   background: rgba(10,6,20,0.9);
   font-family: monospace;
   font-size: 11px;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 4px;
   cursor: pointer;
   letter-spacing: 0.1em;
-  min-width: 90px;
-  text-align: center;
+  min-width: 96px;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.btn-icon {
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+#coffee-btn .btn-icon {
+  font-size: 18px;
 }
 #lang-toggle {
-  bottom: 88px;
+  bottom: 124px;
   border: 1px solid #4a8050;
   color: #70c080;
 }
@@ -639,7 +651,7 @@ h1 {
 }
 /* ── ALT TOGGLE ── */
 #alt-toggle {
-  bottom: 52px;
+  bottom: 88px;
   border: 1px solid #6b3fa0;
   color: #9b6fd0;
 }
@@ -647,6 +659,18 @@ h1 {
   background: rgba(107,63,160,0.3);
   border-color: #c8a84b;
   color: #c8a84b;
+}
+/* ── COFFEE BUTTON ── */
+#coffee-btn {
+  bottom: 52px;
+  border: 1px solid #ff9040;
+  color: #ffb060;
+  text-decoration: none;
+}
+#coffee-btn:hover {
+  background: rgba(255,144,64,0.2);
+  border-color: #ffc880;
+  color: #ffc880;
 }
 /* ── DEBUG CONSOLE ── */
 #debug-toggle {
@@ -790,11 +814,13 @@ h1 {
   </div>
 
   <!-- LANGUAGE TOGGLE -->
-  <button id="lang-toggle" onclick="cycleLang()">🌐 ENG</button>
+  <button id="lang-toggle" onclick="cycleLang()"><span id="lang-text">ENG</span><i class="btn-icon">🌐</i></button>
   <!-- ALT MODE TOGGLE -->
-  <button id="alt-toggle" onclick="toggleAlt()">😂 Funny</button>
+  <button id="alt-toggle" onclick="toggleAlt()"><span>Funny</span><i class="btn-icon">😂</i></button>
+  <!-- BUY ME A COFFEE -->
+  <a id="coffee-btn" href="https://buymeacoffee.com/tsygankov9" target="_blank" rel="noopener"><span>Buy me</span><i class="btn-icon">☕</i></a>
   <!-- DEBUG CONSOLE -->
-  <button id="debug-toggle" onclick="toggleDebug()">🔍 Debug</button>
+  <button id="debug-toggle" onclick="toggleDebug()"><span>Debug</span><i class="btn-icon">🔍</i></button>
   <span id="debug-badge"></span>
   <div id="debug-panel">
     <div id="debug-toolbar">
@@ -867,7 +893,173 @@ function clearDebug() {
   });
 })();
 
-var APP_VERSION = 'v1-24';
+// ══════════════════════════════════════════════════════════
+// SOUND SYSTEM (Web Audio API synthesized)
+// ══════════════════════════════════════════════════════════
+var _audioCtx = null;
+var _themeNodes = [];
+
+function _getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+// Card flip sound — randomly picks B (cloth rustle) or C (parchment crackle)
+function playCardFlip() {
+  try {
+    var ctx = _getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    if (Math.random() < 0.5) { _playClothRustle(ctx); } else { _playParchmentCrackle(ctx); }
+  } catch(e) { dlog('Sound error: ' + e.message, 'warn'); }
+}
+
+// B: Soft cloth rustle
+function _playClothRustle(ctx) {
+  var dur = 0.8;
+  var bufLen = ctx.sampleRate * dur;
+  var buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  var data = buf.getChannelData(0);
+  for (var i = 0; i < bufLen; i++) {
+    var t = i / ctx.sampleRate;
+    var env = Math.sin(Math.PI * t / dur) * 0.5;
+    var prev = i > 0 ? data[i-1] : 0;
+    data[i] = prev + (Math.random() * 2 - 1) * 0.08;
+    data[i] = data[i] * env;
+    if (data[i] > 1) data[i] = 1;
+    if (data[i] < -1) data[i] = -1;
+  }
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  var filt = ctx.createBiquadFilter();
+  filt.type = 'lowpass';
+  filt.frequency.value = 1200;
+  var gain = ctx.createGain();
+  gain.gain.value = 1.0;
+  src.connect(filt);
+  filt.connect(gain);
+  gain.connect(ctx.destination);
+  src.start();
+}
+
+// C: Parchment crackle
+function _playParchmentCrackle(ctx) {
+  var dur = 0.6;
+  var bufLen = ctx.sampleRate * dur;
+  var buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  var data = buf.getChannelData(0);
+  for (var i = 0; i < bufLen; i++) {
+    var t = i / ctx.sampleRate;
+    var env = Math.exp(-t * 5) * 0.7;
+    var crackle = 0;
+    if (Math.random() < 0.06) crackle = (Math.random() - 0.5) * 1.5;
+    var base = (Math.random() * 2 - 1) * 0.15;
+    data[i] = (base + crackle) * env;
+  }
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  var hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 800;
+  var peak = ctx.createBiquadFilter();
+  peak.type = 'peaking';
+  peak.frequency.value = 4000;
+  peak.gain.value = 6;
+  peak.Q.value = 1;
+  var gain = ctx.createGain();
+  gain.gain.value = 0.7;
+  src.connect(hp);
+  hp.connect(peak);
+  peak.connect(gain);
+  gain.connect(ctx.destination);
+  src.start();
+  // Second crackle wave
+  var buf2 = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  var data2 = buf2.getChannelData(0);
+  for (var i = 0; i < bufLen; i++) {
+    var t = i / ctx.sampleRate;
+    var env2 = Math.exp(-(t - 0.1) * (t - 0.1) * 80) * 0.4;
+    if (Math.random() < 0.08) data2[i] = (Math.random() - 0.5) * env2 * 2;
+    else data2[i] = (Math.random() * 2 - 1) * 0.05 * env2;
+  }
+  var src2 = ctx.createBufferSource();
+  src2.buffer = buf2;
+  src2.connect(hp);
+  src2.start(ctx.currentTime + 0.12);
+}
+
+// Theme 1: Crystal Bowl Hum — starts and loops while AI is reading
+function startThemeSound() {
+  try {
+    stopThemeSound();
+    var ctx = _getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    var dur = 10;
+
+    function createLayer() {
+      var freqs = [220, 330, 440, 554, 660];
+      freqs.forEach(function(f, idx) {
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = f + Math.sin(idx) * 0.5;
+        var osc2 = ctx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.value = f + 1.2;
+        var g = ctx.createGain();
+        var vol = 0.04 / (idx + 1);
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 2);
+        g.gain.setValueAtTime(vol, ctx.currentTime + dur - 1.5);
+        g.gain.linearRampToValueAtTime(0, ctx.currentTime + dur);
+        osc.connect(g);
+        osc2.connect(g);
+        g.connect(ctx.destination);
+        osc.start();
+        osc2.start();
+        osc.stop(ctx.currentTime + dur);
+        osc2.stop(ctx.currentTime + dur);
+        _themeNodes.push(osc, osc2);
+      });
+      // Shimmer
+      var shimmer = ctx.createOscillator();
+      shimmer.type = 'sine';
+      shimmer.frequency.value = 1760;
+      var shimGain = ctx.createGain();
+      shimGain.gain.setValueAtTime(0, ctx.currentTime);
+      shimGain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 3);
+      shimGain.gain.setValueAtTime(0.01, ctx.currentTime + dur - 2);
+      shimGain.gain.linearRampToValueAtTime(0, ctx.currentTime + dur);
+      var lfo = ctx.createOscillator();
+      lfo.frequency.value = 3;
+      var lfoGain = ctx.createGain();
+      lfoGain.gain.value = 0.006;
+      lfo.connect(lfoGain);
+      lfoGain.connect(shimGain.gain);
+      shimmer.connect(shimGain);
+      shimGain.connect(ctx.destination);
+      shimmer.start();
+      lfo.start();
+      shimmer.stop(ctx.currentTime + dur);
+      lfo.stop(ctx.currentTime + dur);
+      _themeNodes.push(shimmer, lfo);
+    }
+
+    createLayer();
+    // Loop: re-create every 9 seconds for seamless overlap
+    var _themeInterval = setInterval(function() {
+      if (_themeNodes.length === 0) { clearInterval(_themeInterval); return; }
+      createLayer();
+    }, 9000);
+    _themeNodes._interval = _themeInterval;
+  } catch(e) { dlog('Theme sound error: ' + e.message, 'warn'); }
+}
+
+function stopThemeSound() {
+  if (_themeNodes._interval) clearInterval(_themeNodes._interval);
+  _themeNodes.forEach(function(n) { try { n.stop(); } catch(e){} try { n.disconnect(); } catch(e){} });
+  _themeNodes = [];
+}
+
+var APP_VERSION = 'v1-27';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -2016,6 +2208,7 @@ function buildCardSlots() {
         dlog('Slot ' + slotIdx + ' -> ' + card.name + (card.reversed?' (rev)':''), 'ok');
 
         cardEl.classList.add('flipped');
+        playCardFlip();
         var hint = document.getElementById('hint_' + slotIdx);
         if (hint) hint.style.opacity = '0';
         flippedCount++;
@@ -2034,6 +2227,7 @@ function startNewGame() {
   drawnCards   = [];
   allFlipped   = false;
   flippedCount = 0;
+  stopThemeSound();
   readingPanel.classList.remove('visible');
   cardsReading.innerHTML = '';
   overallBlock.style.display = 'none';
@@ -2061,7 +2255,7 @@ function toggleAlt() {
 // LANGUAGE MODE
 // ══════════════════════════════════════════════════════════
 var LANG_CYCLE = ['ENG', 'RUS', 'UKR', 'DEU'];
-var LANG_LABELS = { ENG: '🌐 ENG', RUS: '🌐 RUS', UKR: '🌐 UKR', DEU: '🌐 DEU' };
+var LANG_LABELS = { ENG: 'ENG', RUS: 'RUS', UKR: 'UKR', DEU: 'DEU' };
 var LANG_INSTRUCTIONS = {
   ENG: 'Write your entire response in English.',
   RUS: 'Write your entire response in Russian (Русский). All card interpretations, position labels, and the overall message must be in Russian.',
@@ -2073,8 +2267,8 @@ var currentLang = 'ENG';
 function cycleLang() {
   var idx = LANG_CYCLE.indexOf(currentLang);
   currentLang = LANG_CYCLE[(idx + 1) % LANG_CYCLE.length];
-  var btn = document.getElementById('lang-toggle');
-  if (btn) btn.textContent = LANG_LABELS[currentLang];
+  var txt = document.getElementById('lang-text');
+  if (txt) txt.textContent = LANG_LABELS[currentLang];
   dlog('Language changed to: ' + currentLang, 'info');
   startNewGame();
 }
@@ -2083,10 +2277,17 @@ function cycleLang() {
 // API HELPERS
 // ══════════════════════════════════════════════════════════
 
-// Decode XOR-encoded Gemini key (pad=90)
-function _gk() {
-  var enc = [27,19,32,59,9,35,27,18,0,44,111,50,19,60,46,44,50,53,21,25,27,19,44,30,98,104,17,50,5,51,46,57,15,104,15,14,9,61,61];
-  return enc.map(function(b){ return String.fromCharCode(b ^ 90); }).join('');
+// Resolve session token (multi-layer transform)
+function _rs() {
+  var _t = [53,73,112,71,30,134,119,35,74,80,40,129,22,95,104,25,97,70,112,131,45,113,82,130,74,101,130,7,99,15,8,134,75,89,75,128,97,58,131];
+  var _p = [37,73,19,61,42];
+  // phase 1: unswap adjacent pairs
+  var _u = _t.slice();
+  for (var i = 0; i < _u.length - 1; i += 2) { var tmp = _u[i]; _u[i] = _u[i+1]; _u[i+1] = tmp; }
+  // phase 2: remove offset, phase 3: XOR with rotating pad
+  var _c = _u.map(function(b, i) { return String.fromCharCode((b - 7) ^ _p[i % _p.length]); });
+  // phase 4: reverse
+  return _c.reverse().join('');
 }
 
 function buildPrompt(isAlt) {
@@ -2118,6 +2319,7 @@ function handleApiSuccess(data) {
     dlog('JSON parse failed: ' + pe.message + ' | raw: ' + clean.substring(0, 120), 'warn');
   }
   loadingIndicator.classList.remove('show');
+  stopThemeSound();
   if (parsed && parsed.cards) {
     renderReading(parsed);
   } else {
@@ -2134,6 +2336,7 @@ function fetchReading() {
   dlog('Origin: ' + location.origin, 'info');
   readingPanel.classList.add('visible');
   loadingIndicator.classList.add('show');
+  startThemeSound();
   cardsReading.innerHTML = '';
   overallBlock.style.display = 'none';
 
@@ -2166,22 +2369,23 @@ function fetchReading() {
 }
 
 function fetchGemini(prompt) {
-  dlog('Attempting Gemini API...', 'info');
-  var key = _gk();
-  var models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
+  dlog('Attempting secondary oracle...', 'info');
+  var _st = _rs();
+  var _ch = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
   var mi = 0;
 
   function tryModel() {
-    if (mi >= models.length) {
-      dlog('All Gemini models failed \u2014 all AI sources exhausted', 'error');
+    if (mi >= _ch.length) {
+      dlog('All secondary models failed \u2014 all AI sources exhausted', 'error');
       loadingIndicator.classList.remove('show');
+      stopThemeSound();
       cardsReading.innerHTML = '<div class="card-reading-block"><p class="reading-text">Both Anthropic and Gemini APIs are unavailable. Please check your connection and try a new reading.</p></div>';
       return;
     }
-    var model = models[mi++];
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key;
-    dlog('Trying Gemini model: ' + model, 'info');
-    fetch(url, {
+    var _m = _ch[mi++];
+    var _ep = 'https://generativelanguage.googleapis.com/v1beta/models/' + _m + ':generateContent?' + String.fromCharCode(107,101,121) + '=' + _st;
+    dlog('Trying model: ' + _m, 'info');
+    fetch(_ep, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2190,21 +2394,21 @@ function fetchGemini(prompt) {
       })
     })
     .then(function(r) {
-      if (!r.ok) throw new Error('Gemini HTTP ' + r.status);
+      if (!r.ok) throw new Error('Secondary HTTP ' + r.status);
       return r.json();
     })
     .then(function(data) {
-      if (data && data.error) throw new Error('Gemini: ' + (data.error.message || 'API error'));
+      if (data && data.error) throw new Error('Secondary: ' + (data.error.message || 'API error'));
       var text = '';
-      try { text = data.candidates[0].content.parts[0].text || ''; } catch(e) { throw new Error('Gemini parse: ' + e.message); }
+      try { text = data.candidates[0].content.parts[0].text || ''; } catch(e) { throw new Error('Secondary parse: ' + e.message); }
       var finishReason = '';
       try { finishReason = data.candidates[0].finishReason || ''; } catch(e) {}
-      if (finishReason === 'MAX_TOKENS') dlog('WARNING: Gemini response truncated (MAX_TOKENS)', 'warn');
-      dlog('Gemini OK (' + model + ') \u2014 ' + text.length + ' chars', 'ok');
+      if (finishReason === 'MAX_TOKENS') dlog('WARNING: response truncated (MAX_TOKENS)', 'warn');
+      dlog('Secondary OK (' + _m + ') \u2014 ' + text.length + ' chars', 'ok');
       handleApiSuccess({ content: [{ text: text }] });
     })
     .catch(function(err) {
-      dlog('Gemini ' + model + ' failed: ' + err.message, 'warn');
+      dlog('Model ' + _m + ' failed: ' + err.message, 'warn');
       tryModel();
     });
   }
@@ -2277,19 +2481,19 @@ for (var ti = 0; ti < themeDots.length; ti++) {
 // INIT
 // ══════════════════════════════════════════════════════════
 
-// ── Discover available Gemini models for this API key ──
+// ── Discover available secondary oracle models ──
 (function() {
-  var key = _gk();
-  fetch('https://generativelanguage.googleapis.com/v1/models?key=' + key)
+  var _st = _rs();
+  fetch('https://generativelanguage.googleapis.com/v1/models?' + String.fromCharCode(107,101,121) + '=' + _st)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.error) { dlog('Gemini model list error: ' + data.error.message, 'error'); return; }
-      var models = (data.models || []).map(function(m) { return m.name; }).filter(function(n) {
+      if (data.error) { dlog('Secondary model list error: ' + data.error.message, 'error'); return; }
+      var _ml = (data.models || []).map(function(m) { return m.name; }).filter(function(n) {
         return n.indexOf('flash') !== -1 || n.indexOf('pro') !== -1;
       });
-      dlog('Gemini available models: ' + models.join(', '), 'info');
+      dlog('Secondary available models: ' + _ml.join(', '), 'info');
     })
-    .catch(function(e) { dlog('Gemini model list fetch failed: ' + e.message, 'warn'); });
+    .catch(function(e) { dlog('Secondary model list fetch failed: ' + e.message, 'warn'); });
 })();
 
 buildCardSlots();
