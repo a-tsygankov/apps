@@ -572,28 +572,31 @@ h1 {
   z-index: 9999;
   background: rgba(14,8,28,0.95);
   border-top: 1px solid rgba(200,168,75,0.2);
-  padding: 7px 10px;
+  padding: 6px 8px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
 }
 .cp-btn {
   font-family: monospace;
   font-size: 10px;
-  padding: 5px 9px;
+  padding: 4px 7px;
   border-radius: 4px;
   border: 1px solid rgba(200,168,75,0.3);
   color: var(--gold, #b8963e);
   background: rgba(200,168,75,0.06);
   cursor: pointer;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 .cp-btn:hover { background: rgba(200,168,75,0.15); border-color: rgba(200,168,75,0.5); }
 .cp-btn.lang { color: #70c080; border-color: rgba(74,128,80,0.5); }
@@ -606,25 +609,27 @@ h1 {
 .cp-coffee {
   font-family: monospace;
   font-size: 10px;
-  padding: 5px 9px;
+  padding: 4px 7px;
   border-radius: 4px;
   border: 1px solid rgba(255,144,64,0.3);
   color: #ffb060;
   background: rgba(255,144,64,0.06);
   cursor: pointer;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   text-decoration: none;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 .cp-coffee:hover { background: rgba(255,144,64,0.2); border-color: rgba(255,176,96,0.5); }
 
 /* Spin wheel in panel */
 .spin-wheel {
-  width: 20px; height: 20px;
+  width: 18px; height: 18px;
+  min-width: 18px;
   border-radius: 50%;
   border: 1.5px solid rgba(200,168,75,0.3);
   position: relative;
@@ -793,9 +798,9 @@ h1 {
   </header>
 
   <div class="spread-selector">
-    <button class="spread-btn active" data-spread="1">Single Card</button>
+    <button class="spread-btn active" data-spread="1">1 Card</button>
     <button class="spread-btn" data-spread="3">Past · Present · Future</button>
-    <button class="spread-btn" data-spread="5">Celtic Cross (5)</button>
+    <button class="spread-btn" data-spread="5">Celtic Cross</button>
   </div>
 
   <p style="text-align:center;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--silver);opacity:0.55;padding:0 20px 8px;text-transform:uppercase;">Tap a card · Space or Enter for next</p>
@@ -1088,7 +1093,7 @@ function stopThemeSound() {
   _themeNodes = [];
 }
 
-var APP_VERSION = 'v1-31';
+var APP_VERSION = 'v1-32';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -2368,7 +2373,7 @@ function applyTheme(t) {
 }
 
 // ══════════════════════════════════════════════════════════
-// TRIPLE-TAP TITLE → CONSOLE TOGGLE
+// TRIPLE-TAP TITLE → CONSOLE/COFFEE SWAP
 // ══════════════════════════════════════════════════════════
 (function() {
   var tapCount = 0;
@@ -2386,16 +2391,20 @@ function applyTheme(t) {
       clearTimeout(tapTimer);
       tapCount = 0;
       var btn = document.getElementById('console-btn');
+      var coffee = document.querySelector('.cp-coffee');
       if (btn) {
         var isVisible = btn.classList.contains('visible');
         if (isVisible) {
-          // Hide button and close console if open
+          // Hide console button, close panel, restore coffee
           btn.classList.remove('visible');
           if (_debugOpen) toggleDebug();
-          dlog('Console button hidden', 'info');
+          if (coffee) coffee.style.display = '';
+          dlog('Console hidden, coffee restored', 'info');
         } else {
+          // Show console button, hide coffee to make room
           btn.classList.add('visible');
-          dlog('Console button revealed', 'info');
+          if (coffee) coffee.style.display = 'none';
+          dlog('Console revealed, coffee hidden', 'info');
         }
       }
     }

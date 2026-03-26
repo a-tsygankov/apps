@@ -1,7 +1,7 @@
 {
-  "name": "Tarot Oracle",
-  "short_name": "Tarot",
-  "start_url": "/apps/Tarot/",
+  "name": "Tarot Oracle - dev",
+  "short_name": "Tarot dev",
+  "start_url": "/apps/tarot-dev/",
   "display": "standalone",
   "background_color": "#120208",
   "theme_color": "#120208",
