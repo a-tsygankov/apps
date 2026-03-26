@@ -563,37 +563,116 @@ h1 {
 }
 
 
-/* ── THEME SWITCHER ── */
-.theme-bar {
+/* ── BOTTOM CONTROL PANEL ── */
+.control-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: rgba(14,8,28,0.95);
+  border-top: 1px solid rgba(200,168,75,0.2);
+  padding: 7px 10px;
   display: flex;
-  gap: 6px;
-  justify-content: center;
-  padding: 0 20px 16px;
   align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
-.theme-bar-label {
-  font-family: 'Cinzel', serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  color: var(--silver);
-  text-transform: uppercase;
-  opacity: 0.6;
-  margin-right: 4px;
-}
-.theme-dot {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
+.cp-btn {
+  font-family: monospace;
+  font-size: 10px;
+  padding: 5px 9px;
+  border-radius: 4px;
+  border: 1px solid rgba(200,168,75,0.3);
+  color: var(--gold, #b8963e);
+  background: rgba(200,168,75,0.06);
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
-  position: relative;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
 }
-.theme-dot:hover { transform: scale(1.2); }
-.theme-dot.active { border-color: var(--gold); }
-.theme-dot[data-t="dusk"]      { background: radial-gradient(circle, #2e2448, #1e1828); }
-.theme-dot[data-t="midnight"]  { background: radial-gradient(circle, #2e1458, #0d0a1a); }
-.theme-dot[data-t="parchment"] { background: radial-gradient(circle, #e8dcc8, #f5ede0); }
-.theme-dot[data-t="forest"]    { background: radial-gradient(circle, #1e3018, #0e1a14); }
+.cp-btn:hover { background: rgba(200,168,75,0.15); border-color: rgba(200,168,75,0.5); }
+.cp-btn.lang { color: #70c080; border-color: rgba(74,128,80,0.5); }
+.cp-btn.lang:hover { background: rgba(74,128,80,0.2); }
+.cp-btn.tone { color: #9b6fd0; border-color: rgba(107,63,160,0.4); }
+.cp-btn.tone:hover { background: rgba(107,63,160,0.2); }
+.cp-btn.tone.active { background: rgba(107,63,160,0.25); border-color: #c8a84b; color: #c8a84b; }
+.cp-btn.theme { color: #c9a84c; border-color: rgba(200,168,75,0.3); }
+.cp-sep { flex: 1; min-width: 2px; }
+.cp-coffee {
+  font-family: monospace;
+  font-size: 10px;
+  padding: 5px 9px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,144,64,0.3);
+  color: #ffb060;
+  background: rgba(255,144,64,0.06);
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.cp-coffee:hover { background: rgba(255,144,64,0.2); border-color: rgba(255,176,96,0.5); }
+
+/* Spin wheel in panel */
+.spin-wheel {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(200,168,75,0.3);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.3s, opacity 0.3s;
+  opacity: 0.4;
+}
+.spin-wheel.active { border-color: #c9a84c; opacity: 1; }
+.spin-wheel-inner {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(200,168,75,0.4);
+  border-top-color: #c9a84c;
+}
+.spin-wheel.active .spin-wheel-inner { animation: spinWheel 1s linear infinite; }
+@keyframes spinWheel { to { transform: rotate(360deg); } }
+.spin-wheel-dot { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: rgba(200,168,75,0.4); }
+.spin-wheel.active .spin-wheel-dot { background: #c9a84c; }
+.sw-t { top: 1px; left: 50%; transform: translateX(-50%); }
+.sw-b { bottom: 1px; left: 50%; transform: translateX(-50%); }
+.sw-l { left: 1px; top: 50%; transform: translateY(-50%); }
+.sw-r { right: 1px; top: 50%; transform: translateY(-50%); }
+
+/* Add padding to body so content doesn't hide behind panel */
+.app { padding-bottom: 48px; }
+
+/* ── CONSOLE BUTTON (hidden in panel, triple-tap to reveal) ── */
+#console-btn {
+  display: none;
+  font-family: monospace;
+  font-size: 10px;
+  padding: 5px 9px;
+  border-radius: 4px;
+  border: 1px solid #c9a84c;
+  color: #c9a84c;
+  background: rgba(200,168,75,0.06);
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+#console-btn:hover { background: rgba(200,168,75,0.15); }
+#console-btn.visible { display: inline-flex; }
 
 /* scrollbar */
 ::-webkit-scrollbar { width: 6px; }
@@ -609,79 +688,10 @@ h1 {
 .tarot-card { animation: cardEntrance 0.5s ease both, floatCard 3s ease-in-out 0.5s infinite; }
 .tarot-card.flipped { animation: none; }
 
-
-/* ── LANG TOGGLE ── */
-/* ── SHARED FIXED BUTTONS ── */
-#lang-toggle, #alt-toggle, #coffee-btn, #debug-toggle {
-  position: fixed;
-  right: 16px;
-  z-index: 9999;
-  background: rgba(10,6,20,0.9);
-  font-family: monospace;
-  font-size: 11px;
-  padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  letter-spacing: 0.1em;
-  min-width: 96px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.btn-icon {
-  font-style: normal;
-  font-size: 13px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-#coffee-btn .btn-icon {
-  font-size: 18px;
-}
-#lang-toggle {
-  bottom: 124px;
-  border: 1px solid #4a8050;
-  color: #70c080;
-}
-#lang-toggle:hover {
-  background: rgba(74,128,80,0.2);
-  border-color: #90d098;
-  color: #90d098;
-}
-/* ── ALT TOGGLE ── */
-#alt-toggle {
-  bottom: 88px;
-  border: 1px solid #6b3fa0;
-  color: #9b6fd0;
-}
-#alt-toggle.active {
-  background: rgba(107,63,160,0.3);
-  border-color: #c8a84b;
-  color: #c8a84b;
-}
-/* ── COFFEE BUTTON ── */
-#coffee-btn {
-  bottom: 52px;
-  border: 1px solid #ff9040;
-  color: #ffb060;
-  text-decoration: none;
-}
-#coffee-btn:hover {
-  background: rgba(255,144,64,0.2);
-  border-color: #ffc880;
-  color: #ffc880;
-}
-/* ── DEBUG CONSOLE ── */
-#debug-toggle {
-  bottom: 16px;
-  border: 1px solid #c9a84c;
-  color: #c9a84c;
-}
 #debug-panel {
   display: none;
   position: fixed;
-  bottom: 50px;
+  bottom: 44px;
   right: 12px;
   left: 12px;
   max-height: 45vh;
@@ -789,13 +799,6 @@ h1 {
   </div>
 
   <p style="text-align:center;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--silver);opacity:0.55;padding:0 20px 8px;text-transform:uppercase;">Tap a card · Space or Enter for next</p>
-  <div class="theme-bar">
-    <span class="theme-bar-label">Theme</span>
-    <span class="theme-dot active" data-t="dusk"     title="Dusk"></span>
-    <span class="theme-dot"        data-t="midnight"  title="Midnight"></span>
-    <span class="theme-dot"        data-t="parchment" title="Parchment"></span>
-    <span class="theme-dot"        data-t="forest"    title="Forest"></span>
-  </div>
 
   <div class="card-stage" id="cardStage"></div>
 
@@ -829,14 +832,24 @@ h1 {
     </div>
   </div>
 
-  <!-- LANGUAGE TOGGLE -->
-  <button id="lang-toggle" onclick="cycleLang()"><span id="lang-text">ENG</span><i class="btn-icon">🌐</i></button>
-  <!-- ALT MODE TOGGLE -->
-  <button id="alt-toggle" onclick="toggleAlt()"><span>Funny</span><i class="btn-icon">😂</i></button>
-  <!-- BUY ME A COFFEE -->
-  <a id="coffee-btn" href="https://buymeacoffee.com/tsygankov9" target="_blank" rel="noopener"><span>Buy me</span><i class="btn-icon">☕</i></a>
+  <!-- BOTTOM CONTROL PANEL -->
+  <div class="control-panel">
+    <div class="spin-wheel" id="spinWheel">
+      <div class="spin-wheel-inner"></div>
+      <div class="spin-wheel-dot sw-t"></div>
+      <div class="spin-wheel-dot sw-b"></div>
+      <div class="spin-wheel-dot sw-l"></div>
+      <div class="spin-wheel-dot sw-r"></div>
+    </div>
+    <button class="cp-btn lang" id="langBtn" onclick="cycleLang()"><span id="lang-text">ENG</span> 🌐</button>
+    <button class="cp-btn tone" id="toneBtn" onclick="toggleAlt()">Normal</button>
+    <button class="cp-btn theme" id="themeBtn" onclick="cycleTheme()"><span id="theme-text">🌙 Dusk</span></button>
+    <span class="cp-sep"></span>
+    <button id="console-btn" onclick="toggleDebug()">🔍 Console</button>
+    <a class="cp-coffee" href="https://buymeacoffee.com/tsygankov9" target="_blank" rel="noopener">Buy me ☕</a>
+  </div>
+
   <!-- DEBUG CONSOLE -->
-  <button id="debug-toggle" onclick="toggleDebug()"><span>Debug</span><i class="btn-icon">🔍</i></button>
   <span id="debug-badge"></span>
   <div id="debug-panel">
     <div id="debug-toolbar">
@@ -1075,7 +1088,7 @@ function stopThemeSound() {
   _themeNodes = [];
 }
 
-var APP_VERSION = 'v1-27';
+var APP_VERSION = 'v1-31';
 dlog('Version: ' + APP_VERSION, 'info');
 dlog('Host: ' + location.hostname + location.pathname, 'info');
 dlog('iOS: ' + /iPhone|iPad|iPod/.test(navigator.userAgent) + ' | Safari: ' + /Safari/.test(navigator.userAgent) + ' | ' + navigator.userAgent.substring(0,80), 'info');
@@ -2140,6 +2153,9 @@ var currentSpread = 1;
 var drawnCards   = [];
 var allFlipped   = false;
 var flippedCount = 0;
+var _lastReadingLang = null;
+var _lastReadingTone = null;
+var _lastReadingData = null;
 
 // DOM refs
 var cardStage        = document.getElementById('cardStage');
@@ -2243,7 +2259,12 @@ function startNewGame() {
   drawnCards   = [];
   allFlipped   = false;
   flippedCount = 0;
+  _lastReadingLang = null;
+  _lastReadingTone = null;
+  _lastReadingData = null;
   stopThemeSound();
+  setSpinWheelActive(false);
+  if (_langDebounceTimer) { clearTimeout(_langDebounceTimer); _langDebounceTimer = null; }
   readingPanel.classList.remove('visible');
   cardsReading.innerHTML = '';
   overallBlock.style.display = 'none';
@@ -2255,39 +2276,166 @@ function startNewGame() {
 resetBtn.addEventListener('click', function() { startNewGame(); });
 
 // ══════════════════════════════════════════════════════════
-// ALT MODE
+// TONE MODE (Normal / Ironic) — saved to localStorage
 // ══════════════════════════════════════════════════════════
 var altMode = false;
 
 function toggleAlt() {
   altMode = !altMode;
-  var btn = document.getElementById('alt-toggle');
-  if (btn) btn.className = altMode ? 'active' : '';
-  dlog('Alt mode: ' + (altMode ? 'ON (humorous)' : 'OFF (standard)'), 'info');
-  startNewGame();
+  var btn = document.getElementById('toneBtn');
+  if (btn) {
+    btn.textContent = altMode ? '😂 Ironic' : 'Normal';
+    btn.classList.toggle('active', altMode);
+  }
+  try { localStorage.setItem('tarot_tone', altMode ? '1' : '0'); } catch(e){}
+  dlog('Tone: ' + (altMode ? 'Ironic' : 'Normal'), 'info');
+  // If reading done, re-fetch with new tone after debounce
+  if (allFlipped) { scheduleLangRefetch(); }
 }
 
 // ══════════════════════════════════════════════════════════
-// LANGUAGE MODE
+// LANGUAGE MODE — smart switching with 4s debounce
 // ══════════════════════════════════════════════════════════
-var LANG_CYCLE = ['ENG', 'RUS', 'UKR', 'DEU'];
-var LANG_LABELS = { ENG: 'ENG', RUS: 'RUS', UKR: 'UKR', DEU: 'DEU' };
+var LANG_CYCLE = ['ENG', 'RUS', 'UKR', 'DEU', 'AZE'];
+var LANG_LABELS = { ENG: 'ENG', RUS: 'RUS', UKR: 'UKR', DEU: 'DEU', AZE: 'AZE' };
 var LANG_INSTRUCTIONS = {
   ENG: 'Write your entire response in English.',
   RUS: 'Write your entire response in Russian (Русский). All card interpretations, position labels, and the overall message must be in Russian.',
   UKR: 'Write your entire response in Ukrainian (Українська). All card interpretations, position labels, and the overall message must be in Ukrainian.',
-  DEU: 'Write your entire response in German (Deutsch). All card interpretations, position labels, and the overall message must be in German.'
+  DEU: 'Write your entire response in German (Deutsch). All card interpretations, position labels, and the overall message must be in German.',
+  AZE: 'Write your entire response in Azerbaijani (Azərbaycan dili). All card interpretations, position labels, and the overall message must be in Azerbaijani.'
 };
 var currentLang = 'ENG';
+var _langDebounceTimer = null;
 
 function cycleLang() {
   var idx = LANG_CYCLE.indexOf(currentLang);
   currentLang = LANG_CYCLE[(idx + 1) % LANG_CYCLE.length];
   var txt = document.getElementById('lang-text');
   if (txt) txt.textContent = LANG_LABELS[currentLang];
+  try { localStorage.setItem('tarot_lang', currentLang); } catch(e){}
   dlog('Language changed to: ' + currentLang, 'info');
-  startNewGame();
+
+  if (!allFlipped) {
+    // Cards not all revealed — just switch language for upcoming reading
+    dlog('Cards not all flipped — language queued for next reading', 'info');
+  } else {
+    // All cards flipped — debounce 4s then re-fetch
+    scheduleLangRefetch();
+  }
 }
+
+function scheduleLangRefetch() {
+  if (_langDebounceTimer) clearTimeout(_langDebounceTimer);
+  dlog('Will re-fetch reading in 4s...', 'info');
+  _langDebounceTimer = setTimeout(function() {
+    _langDebounceTimer = null;
+    // Skip re-fetch if user returned to the same lang+tone combo
+    if (_lastReadingData && _lastReadingLang === currentLang && _lastReadingTone === altMode) {
+      dlog('Same lang+tone as cached reading — restoring without re-fetch', 'ok');
+      renderReading(_lastReadingData);
+      return;
+    }
+    dlog('Re-fetching reading with lang=' + currentLang + ', tone=' + (altMode?'ironic':'normal'), 'info');
+    fetchReading();
+  }, 4000);
+}
+
+// ══════════════════════════════════════════════════════════
+// THEME CYCLING — saved to localStorage
+// ══════════════════════════════════════════════════════════
+var THEME_CYCLE = ['dusk', 'midnight', 'parchment', 'forest'];
+var THEME_LABELS = { dusk: '🌙 Dusk', midnight: '🌑 Midnight', parchment: '📜 Parchment', forest: '🌲 Forest' };
+var currentTheme = 'dusk';
+
+function cycleTheme() {
+  var idx = THEME_CYCLE.indexOf(currentTheme);
+  currentTheme = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+  applyTheme(currentTheme);
+  try { localStorage.setItem('tarot_theme', currentTheme); } catch(e){}
+  dlog('Theme: ' + currentTheme, 'info');
+}
+
+function applyTheme(t) {
+  currentTheme = t;
+  if (t === 'dusk') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', t);
+  }
+  var txt = document.getElementById('theme-text');
+  if (txt) txt.textContent = THEME_LABELS[t] || t;
+}
+
+// ══════════════════════════════════════════════════════════
+// TRIPLE-TAP TITLE → CONSOLE TOGGLE
+// ══════════════════════════════════════════════════════════
+(function() {
+  var tapCount = 0;
+  var tapTimer = null;
+  var titleEl = document.querySelector('h1');
+  if (!titleEl) return;
+  titleEl.style.cursor = 'default';
+  titleEl.addEventListener('click', function(e) {
+    e.preventDefault();
+    tapCount++;
+    if (tapCount === 1) {
+      tapTimer = setTimeout(function() { tapCount = 0; }, 2000);
+    }
+    if (tapCount >= 3) {
+      clearTimeout(tapTimer);
+      tapCount = 0;
+      var btn = document.getElementById('console-btn');
+      if (btn) {
+        var isVisible = btn.classList.contains('visible');
+        if (isVisible) {
+          // Hide button and close console if open
+          btn.classList.remove('visible');
+          if (_debugOpen) toggleDebug();
+          dlog('Console button hidden', 'info');
+        } else {
+          btn.classList.add('visible');
+          dlog('Console button revealed', 'info');
+        }
+      }
+    }
+  });
+})();
+
+// ══════════════════════════════════════════════════════════
+// SPIN WHEEL CONTROL
+// ══════════════════════════════════════════════════════════
+function setSpinWheelActive(active) {
+  var sw = document.getElementById('spinWheel');
+  if (sw) sw.classList.toggle('active', active);
+}
+
+// ══════════════════════════════════════════════════════════
+// RESTORE SETTINGS FROM localStorage
+// ══════════════════════════════════════════════════════════
+(function() {
+  try {
+    var savedLang = localStorage.getItem('tarot_lang');
+    if (savedLang && LANG_CYCLE.indexOf(savedLang) !== -1) {
+      currentLang = savedLang;
+      var txt = document.getElementById('lang-text');
+      if (txt) txt.textContent = LANG_LABELS[currentLang];
+      dlog('Restored lang: ' + currentLang, 'info');
+    }
+    var savedTone = localStorage.getItem('tarot_tone');
+    if (savedTone === '1') {
+      altMode = true;
+      var btn = document.getElementById('toneBtn');
+      if (btn) { btn.textContent = '😂 Ironic'; btn.classList.add('active'); }
+      dlog('Restored tone: Ironic', 'info');
+    }
+    var savedTheme = localStorage.getItem('tarot_theme');
+    if (savedTheme && THEME_CYCLE.indexOf(savedTheme) !== -1) {
+      applyTheme(savedTheme);
+      dlog('Restored theme: ' + savedTheme, 'info');
+    }
+  } catch(e) { dlog('localStorage restore failed: ' + e.message, 'warn'); }
+})();
 
 // ══════════════════════════════════════════════════════════
 // API HELPERS
@@ -2336,7 +2484,11 @@ function handleApiSuccess(data) {
   }
   loadingIndicator.classList.remove('show');
   stopThemeSound();
+  setSpinWheelActive(false);
   if (parsed && parsed.cards) {
+    _lastReadingLang = currentLang;
+    _lastReadingTone = altMode;
+    _lastReadingData = parsed;
     renderReading(parsed);
   } else {
     dlog('API response unparseable \u2014 no fallback available', 'error');
@@ -2345,7 +2497,7 @@ function handleApiSuccess(data) {
 }
 
 // ══════════════════════════════════════════════════════════
-// AI READING — Anthropic first, Gemini fallback
+// AI READING — Gemini first, Anthropic fallback
 // ══════════════════════════════════════════════════════════
 function fetchReading() {
   dlog('Fetching AI reading... (alt=' + altMode + ', lang=' + currentLang + ')', 'info');
@@ -2353,38 +2505,44 @@ function fetchReading() {
   readingPanel.classList.add('visible');
   loadingIndicator.classList.add('show');
   startThemeSound();
+  setSpinWheelActive(true);
   cardsReading.innerHTML = '';
   overallBlock.style.display = 'none';
 
   var prompt = buildPrompt(altMode);
 
-  dlog('Attempting Anthropic API...', 'info');
-  fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2500,
-      messages: [{ role: 'user', content: prompt }]
+  // Try Gemini first (works from any origin), Anthropic as fallback
+  fetchGemini(prompt, function() {
+    dlog('Gemini exhausted — trying Anthropic API...', 'info');
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 3500,
+        messages: [{ role: 'user', content: prompt }]
+      })
     })
-  })
-  .then(function(r) {
-    if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
-    return r.json();
-  })
-  .then(function(data) {
-    if (data && data.error) throw new Error(data.error.message || 'API error');
-    dlog('Anthropic OK', 'ok');
-    handleApiSuccess(data);
-  })
-  .catch(function(err) {
-    var isCors = err.message === 'Load failed' || err.message === 'Failed to fetch' || err.message.indexOf('NetworkError') !== -1;
-    dlog('Anthropic failed: ' + err.message + (isCors ? ' (likely CORS block \u2014 trying Gemini)' : ''), isCors ? 'warn' : 'error');
-    fetchGemini(prompt);
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
+      return r.json();
+    })
+    .then(function(data) {
+      if (data && data.error) throw new Error(data.error.message || 'API error');
+      dlog('Anthropic OK', 'ok');
+      handleApiSuccess(data);
+    })
+    .catch(function(err) {
+      dlog('Anthropic also failed: ' + err.message, 'error');
+      loadingIndicator.classList.remove('show');
+      stopThemeSound();
+      setSpinWheelActive(false);
+      cardsReading.innerHTML = '<div class="card-reading-block"><p class="reading-text">All AI sources are unavailable. Please check your connection and try a new reading.</p></div>';
+    });
   });
 }
 
-function fetchGemini(prompt) {
+function fetchGemini(prompt, onAllFailed) {
   dlog('Attempting secondary oracle...', 'info');
   var _st = _rs();
   var _ch = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
@@ -2392,10 +2550,16 @@ function fetchGemini(prompt) {
 
   function tryModel() {
     if (mi >= _ch.length) {
-      dlog('All secondary models failed \u2014 all AI sources exhausted', 'error');
-      loadingIndicator.classList.remove('show');
-      stopThemeSound();
-      cardsReading.innerHTML = '<div class="card-reading-block"><p class="reading-text">Both Anthropic and Gemini APIs are unavailable. Please check your connection and try a new reading.</p></div>';
+      if (onAllFailed) {
+        dlog('All secondary models failed \u2014 trying fallback...', 'warn');
+        onAllFailed();
+      } else {
+        dlog('All AI sources exhausted', 'error');
+        loadingIndicator.classList.remove('show');
+        stopThemeSound();
+        setSpinWheelActive(false);
+        cardsReading.innerHTML = '<div class="card-reading-block"><p class="reading-text">All AI sources are unavailable. Please check your connection and try a new reading.</p></div>';
+      }
       return;
     }
     var _m = _ch[mi++];
@@ -2406,7 +2570,7 @@ function fetchGemini(prompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.85, maxOutputTokens: 4000 }
+        generationConfig: { temperature: 0.85, maxOutputTokens: 6000 }
       })
     })
     .then(function(r) {
@@ -2473,25 +2637,6 @@ document.addEventListener('keydown', function(e) {
     }
   }
 });
-
-// ── THEME SWITCHER ──
-var themeDots = document.querySelectorAll('.theme-dot');
-for (var ti = 0; ti < themeDots.length; ti++) {
-  (function(dot) {
-    dot.addEventListener('click', function() {
-      var t = dot.getAttribute('data-t');
-      for (var j = 0; j < themeDots.length; j++) themeDots[j].classList.remove('active');
-      dot.classList.add('active');
-      // dusk = default (no attribute), others set data-theme
-      if (t === 'dusk') {
-        document.documentElement.removeAttribute('data-theme');
-      } else {
-        document.documentElement.setAttribute('data-theme', t);
-      }
-      dlog('Theme: ' + t, 'info');
-    });
-  })(themeDots[ti]);
-}
 
 // ══════════════════════════════════════════════════════════
 // INIT
