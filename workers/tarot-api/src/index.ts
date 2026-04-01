@@ -5,6 +5,15 @@ import { handleTts } from './handlers/tts.js';
 import { handleSession } from './handlers/session.js';
 import { handleEvent } from './handlers/event.js';
 import { handleVersion } from './handlers/version.js';
+import { handleExport } from './handlers/admin-export.js';
+import {
+    handleSchemaActivate,
+    handleSchemaRollback,
+    handleSchemaMigrate,
+    handleReindex,
+} from './handlers/admin-migrate.js';
+import { R2SchemaRepository } from './repositories/schema-repository.js';
+import { SchemaService } from './services/schema-service.js';
 import { R2UserRepository } from './repositories/user-repository.js';
 import { R2GameRepository } from './repositories/game-repository.js';
 import { R2AnalyticsRepository } from './repositories/analytics-repository.js';
@@ -28,6 +37,10 @@ export default {
         if (!isAllowedOrigin(request, env)) {
             return new Response('Forbidden', { status: 403 });
         }
+
+        // Ensure schema is initialized (cheap no-op after first call)
+        const schemaRepo = new R2SchemaRepository(env.R2);
+        const schemaService = new SchemaService(schemaRepo);
 
         // Compose dependencies
         const users = new R2UserRepository(env.R2);
@@ -54,6 +67,21 @@ export default {
                 response = await handleVersion(request, env);
             } else if (path === '/api/health' && request.method === 'GET') {
                 response = Response.json({ status: 'ok' });
+            // ── Admin routes (X-Admin-Key protected) ──
+            } else if (path === '/api/admin/export' && request.method === 'GET') {
+                response = await handleExport(request, env);
+            } else if (path === '/api/admin/schema/activate' && request.method === 'POST') {
+                response = await handleSchemaActivate(request, env);
+            } else if (path === '/api/admin/schema/rollback' && request.method === 'POST') {
+                response = await handleSchemaRollback(request, env);
+            } else if (path === '/api/admin/schema/migrate' && request.method === 'POST') {
+                response = await handleSchemaMigrate(request, env);
+            } else if (path === '/api/admin/reindex' && request.method === 'POST') {
+                response = await handleReindex(request, env);
+            } else if (path === '/api/admin/schema/status' && request.method === 'GET') {
+                const active = await schemaService.ensureInitialized();
+                const manifest = await schemaRepo.getLatestManifest();
+                response = Response.json({ active, latestManifest: manifest });
             } else {
                 response = Response.json(
                     { error: 'Not found', path },
@@ -78,7 +106,7 @@ function corsResponse(env: Env, response: Response): Response {
     const headers = new Headers(response.headers);
     headers.set('Access-Control-Allow-Origin', env.ALLOWED_ORIGINS);
     headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'Content-Type');
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Key');
     headers.set('Access-Control-Max-Age', '86400');
 
     return new Response(response.body, {

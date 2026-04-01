@@ -120,6 +120,44 @@ export interface ActiveSchemaDocument {
     status: 'active' | 'migrating' | 'rollback';
 }
 
+/**
+ * Version descriptor stored at schemas/versions/{version}.json.
+ * Describes what changed in a schema generation and how to migrate.
+ */
+export interface SchemaVersionDescriptor {
+    version: string;               // e.g. "2026.04.01-01"
+    previousVersion: string | null;
+    createdAt: string;
+    description: string;
+    changes: SchemaChange[];
+    migrationStrategy: 'lazy' | 'batch' | 'none';
+}
+
+export interface SchemaChange {
+    entity: string;                // e.g. "user", "game", "turn"
+    changeType: 'add_field' | 'remove_field' | 'rename_field' | 'change_type' | 'restructure';
+    field: string;
+    description: string;
+    defaultValue?: unknown;        // for add_field: value to use when migrating old docs
+}
+
+/**
+ * Migration manifest stored at schemas/manifests/{id}.json.
+ * Tracks progress of a batch migration run.
+ */
+export interface MigrationManifest {
+    manifestId: string;
+    fromVersion: string;
+    toVersion: string;
+    startedAt: string;
+    completedAt: string | null;
+    status: 'running' | 'completed' | 'failed' | 'rolled_back';
+    totalDocuments: number;
+    processedDocuments: number;
+    failedDocuments: number;
+    errors: Array<{ key: string; error: string }>;
+}
+
 // ── Analytics ────────────────────────────────────────────────────────
 
 export interface DailySummary {

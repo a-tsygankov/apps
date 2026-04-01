@@ -1,23 +1,38 @@
 import { createAppServices } from './app/composition-root.js';
+import { restoreTheme } from './ui/styles/themes.js';
+
+// Register all Lit components
+import './ui/components/tarot-app.js';
 
 /**
  * Application entry point.
- * Creates all services via DI and initializes the app.
+ * Creates all services via DI and mounts the UI.
  */
 async function init() {
+    // Restore user's theme before first paint
+    restoreTheme();
+
     const services = createAppServices();
 
-    // Log session start
+    // Log session start (fire-and-forget)
     services.apiService.logSessionAsync();
 
     // Check version compatibility
     const compat = await services.compatibilityService.checkAsync();
     if (compat.status === 'incompatible') {
         console.warn('Client incompatible:', compat.message);
-        // TODO: Show maintenance/update UI
     } else if (compat.status === 'update_available') {
         console.info('Update available:', compat.message);
-        // TODO: Show update banner
+    }
+
+    // Mount the app shell
+    const appEl = document.createElement('tarot-app');
+    (appEl as any).setServices(services);
+
+    const container = document.getElementById('app');
+    if (container) {
+        container.innerHTML = '';
+        container.appendChild(appEl);
     }
 
     console.log('Tarot Oracle initialized', {
@@ -27,8 +42,6 @@ async function init() {
         sttAvailable: services.sttService.isAvailable(),
         ttsAvailable: services.ttsService.isAvailable(),
     });
-
-    // TODO: Mount UI components
 }
 
 init().catch(console.error);
