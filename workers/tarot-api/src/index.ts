@@ -18,10 +18,12 @@ import { R2UserRepository } from './repositories/user-repository.js';
 import { R2GameRepository } from './repositories/game-repository.js';
 import { R2AnalyticsRepository } from './repositories/analytics-repository.js';
 import { IndexWriter } from './services/index-writer.js';
+import { checkRateLimit, rateLimitResponse } from './middleware/rate-limiter.js';
+import { WORKER_CONFIG } from './config.js';
 
 /**
  * Tarot API — Cloudflare Worker entry point.
- * Routes requests to handlers with CORS support.
+ * Routes requests to handlers with CORS support and rate limiting.
  */
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
@@ -50,6 +52,23 @@ export default {
         const deps = { users, games, analytics, indexWriter };
 
         let response: Response;
+
+        // Rate limiting for reading/followup endpoints
+        const clientIp = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+        if (path === '/api/reading' || path === '/api/followup') {
+            const rl = checkRateLimit(`reading:${clientIp}`, {
+                maxRequests: WORKER_CONFIG.rateLimit.readingsPerHour,
+                windowMs: 3_600_000,
+            });
+            if (!rl.allowed) return corsResponse(env, rateLimitResponse(rl));
+        }
+        if (path === '/api/event') {
+            const rl = checkRateLimit(`event:${clientIp}`, {
+                maxRequests: WORKER_CONFIG.rateLimit.eventsPerMinute,
+                windowMs: 60_000,
+            });
+            if (!rl.allowed) return corsResponse(env, rateLimitResponse(rl));
+        }
 
         try {
             // Route matching

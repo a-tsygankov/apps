@@ -165,18 +165,44 @@ export class ApiService implements IApiService {
                     attempt > 0 ? `Retrying (${attempt}/${this.config.retryCount})...` : 'Sending...',
                 );
 
-                const response = await fetch(this.config.apiBase + endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                    signal: options?.cancellationToken,
-                });
+                // Combine cancellation token with request timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(
+                    () => controller.abort(),
+                    this.config.readingTimeoutMs,
+                );
 
-                return response;
+                if (options?.cancellationToken) {
+                    options.cancellationToken.addEventListener('abort', () => controller.abort());
+                }
+
+                try {
+                    const response = await fetch(this.config.apiBase + endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body),
+                        signal: controller.signal,
+                    });
+
+                    // Handle rate limiting with Retry-After
+                    if (response.status === 429 && attempt < this.config.retryCount) {
+                        const retryAfter = response.headers.get('Retry-After');
+                        const waitMs = retryAfter
+                            ? parseInt(retryAfter, 10) * 1000
+                            : this.backoffMs(attempt);
+                        options?.progress?.report(`Rate limited, waiting ${Math.ceil(waitMs / 1000)}s...`);
+                        await this.delay(waitMs);
+                        continue;
+                    }
+
+                    return response;
+                } finally {
+                    clearTimeout(timeoutId);
+                }
             } catch (err) {
                 lastError = err instanceof Error ? err : new Error(String(err));
                 if (attempt < this.config.retryCount) {
-                    await this.backoff(attempt);
+                    await this.delay(this.backoffMs(attempt));
                 }
             }
         }
@@ -184,9 +210,12 @@ export class ApiService implements IApiService {
         throw lastError ?? new Error('Request failed');
     }
 
-    private backoff(attempt: number): Promise<void> {
-        const delay = Math.min(1000 * 2 ** attempt, 8000) + Math.random() * 500;
-        return new Promise(resolve => setTimeout(resolve, delay));
+    private backoffMs(attempt: number): number {
+        return Math.min(1000 * 2 ** attempt, 8000) + Math.random() * 500;
+    }
+
+    private delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
 
