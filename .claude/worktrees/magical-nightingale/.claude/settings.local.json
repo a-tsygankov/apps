@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git sparse-checkout:*)",
+      "Bash(mkdir -p src/app src/models src/services/Tts src/services/Stt src/services/Audio src/services/Storage src/services/Versioning src/ui/components src/ui/panels src/ui/layout src/ui/icons src/prompts src/analytics tests public dashboard)",
+      "Bash(mkdir -p ../shared/contracts ../shared/models ../shared/utils ../shared/constants)",
+      "Bash(mkdir -p ../workers/tarot-api/src/handlers ../workers/tarot-api/src/services ../workers/tarot-api/src/repositories ../workers/tarot-api/src/indexes ../workers/tarot-api/src/infrastructure)",
+      "Bash(npm install:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
