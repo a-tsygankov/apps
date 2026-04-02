@@ -16,11 +16,11 @@ export interface ThemeConfig {
 }
 
 export const CONFIG = {
-    apiBase: 'https://tarot-api.YOUR.workers.dev',
+    apiBase: 'https://tarot-api.tarotoracle.workers.dev',
 
     languages: [
-        { code: 'ENG', label: 'English',    sttLang: 'en-US', voiceId: 'ELEVEN_EN_VOICE_ID' },
-        { code: 'RUS', label: 'Русский',    sttLang: 'ru-RU', voiceId: 'ELEVEN_RU_VOICE_ID' },
+        { code: 'ENG', label: 'English',    sttLang: 'en-US', voiceId: 'MKlLqCItoCkvdhrxgtLv' },
+        { code: 'RUS', label: 'Русский',    sttLang: 'ru-RU', voiceId: 'GN4wbsbejSnGSa1AzjH5' },
         { code: 'UKR', label: 'Українська', sttLang: 'uk-UA', voiceId: null },
         { code: 'DEU', label: 'Deutsch',    sttLang: 'de-DE', voiceId: null },
         { code: 'AZE', label: 'Azərbaycan', sttLang: 'az-AZ', voiceId: null },
