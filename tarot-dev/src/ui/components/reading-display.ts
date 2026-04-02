@@ -145,6 +145,9 @@ export class ReadingDisplay extends LitElement {
                     <button class="btn btn-primary" @click=${this._askFollowUp}>
                         💬 Ask Follow-up
                     </button>
+                    <button class="btn" @click=${this._enterVoiceMode}>
+                        🎙 Voice Mode
+                    </button>
                     <button class="btn btn-ghost" @click=${this._newReading}>
                         New Reading
                     </button>
@@ -186,6 +189,11 @@ export class ReadingDisplay extends LitElement {
 
     private _askFollowUp(): void {
         this.dispatchEvent(new CustomEvent('ask-followup'));
+    }
+
+    private _enterVoiceMode(): void {
+        this.services.ttsService.stop();
+        this.dispatchEvent(new CustomEvent('enter-voice'));
     }
 
     private _newReading(): void {

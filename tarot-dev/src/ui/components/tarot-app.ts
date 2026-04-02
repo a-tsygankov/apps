@@ -9,8 +9,9 @@ import './card-spread.js';
 import './reading-display.js';
 import './followup-chat.js';
 import './settings-panel.js';
+import './voice-mode.js';
 
-export type AppScreen = 'home' | 'spread' | 'reading' | 'chat' | 'settings';
+export type AppScreen = 'home' | 'spread' | 'reading' | 'chat' | 'settings' | 'voice';
 
 /**
  * Root application shell — manages screen navigation and services.
@@ -152,6 +153,7 @@ export class TarotApp extends LitElement {
                     <reading-display
                         .services=${this._services}
                         @ask-followup=${() => this.navigate('chat')}
+                        @enter-voice=${() => this.navigate('voice')}
                         @new-reading=${() => this._startNewReading()}
                     ></reading-display>
                 `;
@@ -168,6 +170,13 @@ export class TarotApp extends LitElement {
                         .services=${this._services}
                         @close=${() => this.navigate('home')}
                     ></settings-panel>
+                `;
+            case 'voice':
+                return html`
+                    <voice-mode
+                        .services=${this._services}
+                        @exit-voice=${() => this.navigate('reading')}
+                    ></voice-mode>
                 `;
         }
     }
