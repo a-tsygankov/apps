@@ -2,7 +2,7 @@ name: Deploy Tarot Dev
 
 on:
   push:
-    branches: [refac-1]
+    branches: [main]
     paths:
       - 'tarot-dev/**'
       - 'shared/**'
