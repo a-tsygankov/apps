@@ -1,15 +1,340 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Andrey's  apps</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#141024">
+<meta name="description" content="Andrey's apps — Tarot Oracle and FC 26 Companion">
+<title>Andrey's Apps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-a: #1e1828;
+    --bg-b: #0f172a;
+    --ink: #ece6d6;
+    --muted: #9aa0b4;
+    --gold: #b8963e;
+    --gold-bright: #d4a94a;
+    --parchment: #f2e8d0;
+    --violet-deep: #2a1f3d;
+    --slate: #0f172a;
+    --slate-soft: #1e2a44;
+    --neon: #22cc55;
+    --neon-blue: #4477ee;
+    --neon-red: #f04030;
+    --border-gold: rgba(184, 150, 62, 0.35);
+    --border-slate: rgba(120, 150, 200, 0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    min-height: 100%;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 700px at 15% 10%, rgba(122, 85, 176, 0.28), transparent 60%),
+      radial-gradient(900px 700px at 90% 95%, rgba(68, 119, 238, 0.22), transparent 60%),
+      linear-gradient(160deg, var(--bg-a) 0%, #171428 55%, var(--bg-b) 100%);
+    background-attachment: fixed;
+    min-height: 100dvh;
+    padding:
+      max(24px, env(safe-area-inset-top))
+      max(20px, env(safe-area-inset-right))
+      max(28px, env(safe-area-inset-bottom))
+      max(20px, env(safe-area-inset-left));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 920px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    flex: 1;
+  }
+
+  header.hero {
+    text-align: center;
+    padding: 12px 4px 4px;
+  }
+
+  .hero h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: clamp(28px, 7vw, 40px);
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--gold-bright), var(--parchment), #a8c8ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 6px;
+  }
+
+  .hero p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: clamp(14px, 3.5vw, 17px);
+    letter-spacing: 1px;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  @media (min-width: 760px) {
+    .cards { grid-template-columns: 1fr 1fr; gap: 24px; }
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+    padding: 22px 20px 20px;
+    border-radius: 18px;
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .card:active { transform: scale(0.985); }
+
+  @media (hover: hover) {
+    .card:hover { transform: translateY(-2px); }
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  /* ─── Tarot card ─── */
+  .card.tarot {
+    border: 1px solid var(--border-gold);
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.45),
+      inset 0 0 0 1px rgba(212, 169, 74, 0.08);
+  }
+  .card.tarot::before {
+    background:
+      radial-gradient(120% 80% at 20% 10%, rgba(212, 169, 74, 0.18), transparent 55%),
+      radial-gradient(100% 80% at 90% 100%, rgba(139, 26, 42, 0.35), transparent 60%),
+      linear-gradient(160deg, #241c38 0%, #1c1428 100%);
+  }
+  .card.tarot .art {
+    color: var(--gold-bright);
+    filter: drop-shadow(0 0 12px rgba(212, 169, 74, 0.35));
+  }
+  .card.tarot .title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--parchment);
+    letter-spacing: 3px;
+  }
+  .card.tarot .subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: #c8bda0;
+  }
+  .card.tarot .cta {
+    color: var(--gold-bright);
+    border-color: var(--border-gold);
+    background: rgba(184, 150, 62, 0.08);
+  }
+
+  /* ─── FC 26 card ─── */
+  .card.fc {
+    border: 1px solid var(--border-slate);
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(160, 180, 220, 0.05);
+  }
+  .card.fc::before {
+    background:
+      radial-gradient(100% 70% at 80% 10%, rgba(68, 119, 238, 0.22), transparent 60%),
+      radial-gradient(100% 80% at 10% 100%, rgba(34, 204, 85, 0.18), transparent 60%),
+      linear-gradient(160deg, #12203a 0%, #0b1222 100%);
+  }
+  .card.fc .title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 2px;
+  }
+  .card.fc .subtitle {
+    font-family: 'Inter', sans-serif;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  .card.fc .cta {
+    color: #d8e4ff;
+    border-color: rgba(120, 170, 255, 0.35);
+    background: rgba(68, 119, 238, 0.1);
+  }
+
+  .art {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: clamp(18px, 5vw, 22px);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: clamp(14px, 3.8vw, 16px);
+    margin-bottom: 18px;
+  }
+
+  .cta {
+    margin-top: auto;
+    align-self: flex-start;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    min-height: 44px;
+    border-radius: 10px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cta svg { width: 14px; height: 14px; }
+
+  footer {
+    margin-top: auto;
+    padding-top: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  footer .dot {
+    display: inline-block;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    margin: 0 8px;
+    vertical-align: middle;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card, .card:active, .card:hover { transition: none; transform: none; }
+  }
+</style>
 </head>
 <body>
-    <h1>Andrey's applications:</h1>
-    
-    <p>
-        <li><a href="../tarot/">Tarot Oracle v2</a></li>
-        <li><a href="../football/">FC 26 Companion</a></li>
-    </p>
+  <div class="wrap">
+    <header class="hero">
+      <h1>Andrey's Apps</h1>
+      <p>pick a portal</p>
+    </header>
+
+    <main class="cards">
+      <a class="card tarot" href="../tarot/" aria-label="Open Tarot Oracle">
+        <svg class="art" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="tcard" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2a1f3d"/>
+              <stop offset="1" stop-color="#120820"/>
+            </linearGradient>
+          </defs>
+          <rect x="16" y="6" width="32" height="52" rx="4" fill="url(#tcard)" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="32" cy="24" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M32 18 L33.5 22 L38 22 L34.2 24.5 L35.7 29 L32 26.3 L28.3 29 L29.8 24.5 L26 22 L30.5 22 Z" fill="currentColor" opacity="0.9"/>
+          <path d="M22 38 Q32 34 42 38" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.75"/>
+          <path d="M22 44 Q32 40 42 44" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.55"/>
+          <path d="M22 50 Q32 46 42 50" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.35"/>
+        </svg>
+        <div class="title">Tarot Oracle</div>
+        <div class="subtitle">divination &amp; fate</div>
+        <span class="cta">
+          Enter
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+
+      <a class="card fc" href="../football/" aria-label="Open FC 26 Companion">
+        <svg class="art" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <radialGradient id="fcBall" cx="35%" cy="28%" r="68%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="70%" stop-color="#dcdcd6"/>
+              <stop offset="100%" stop-color="#a8a8a0"/>
+            </radialGradient>
+            <radialGradient id="fcRed" cx="30%" cy="60%" r="60%">
+              <stop offset="0%" stop-color="#f04030"/>
+              <stop offset="100%" stop-color="#880000"/>
+            </radialGradient>
+            <radialGradient id="fcBlue" cx="65%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#4477ee"/>
+              <stop offset="100%" stop-color="#002299"/>
+            </radialGradient>
+            <radialGradient id="fcGreen" cx="60%" cy="70%" r="60%">
+              <stop offset="0%" stop-color="#22cc55"/>
+              <stop offset="100%" stop-color="#006622"/>
+            </radialGradient>
+            <clipPath id="fcBallClip"><circle cx="32" cy="32" r="26"/></clipPath>
+          </defs>
+          <circle cx="32" cy="32" r="26" fill="url(#fcBall)"/>
+          <g clip-path="url(#fcBallClip)">
+            <path d="M35 28 C 30 23, 24 19, 16 14 A 26 26 0 0 0 16 52 C 24 44, 30 35, 35 28 Z" fill="url(#fcRed)"/>
+            <path d="M35 28 C 30 23, 24 19, 16 14 A 26 26 0 0 1 58 32 C 50 30, 42 29, 35 28 Z" fill="url(#fcBlue)"/>
+            <path d="M35 28 C 42 29, 50 30, 58 32 A 26 26 0 0 1 16 52 C 24 44, 30 35, 35 28 Z" fill="url(#fcGreen)"/>
+          </g>
+          <g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" clip-path="url(#fcBallClip)">
+            <path d="M35 28 C 30 23, 24 19, 16 14"/>
+            <path d="M35 28 C 42 29, 50 30, 58 32"/>
+            <path d="M35 28 C 30 35, 24 44, 16 52"/>
+          </g>
+          <circle cx="32" cy="32" r="26" fill="none" stroke="#000000" stroke-width="0.6" opacity="0.4"/>
+        </svg>
+        <div class="title">FC 26 Companion</div>
+        <div class="subtitle">team builder &amp; squad tools</div>
+        <span class="cta">
+          Launch
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+    </main>
+
+    <footer>
+      phone-first<span class="dot"></span>no tracking
+    </footer>
+  </div>
 </body>
 </html>
