@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#141024">
-<meta name="description" content="Andrey's apps — Tarot Oracle, FC 26 Companion, Howler and Gigsy">
+<meta name="description" content="Andrey's apps — Tarot Oracle, FC 26 Companion, Howler, Gigsy and Wyrd">
 <title>Andrey's Apps</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,6 +28,7 @@
     --border-slate: rgba(120, 150, 200, 0.25);
     --border-teal: rgba(90, 200, 210, 0.3);
     --border-amber: rgba(230, 160, 70, 0.32);
+    --border-bronze: rgba(192, 150, 106, 0.32);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -230,6 +231,40 @@
     color: #ffd39a;
     border-color: var(--border-amber);
     background: rgba(230, 160, 70, 0.09);
+  }
+
+  /* ─── Wyrd cards (shared palette, two entries) ─── */
+  .card.wyrd {
+    border: 1px solid var(--border-bronze);
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(192, 150, 106, 0.06);
+  }
+  .card.wyrd::before {
+    background:
+      radial-gradient(120% 90% at 25% 10%, rgba(192, 150, 106, 0.2), transparent 60%),
+      radial-gradient(100% 80% at 90% 100%, rgba(80, 110, 130, 0.3), transparent 60%),
+      linear-gradient(160deg, #1a2028 0%, #0f1419 100%);
+  }
+  .card.wyrd .art {
+    color: #d9b588;
+    filter: drop-shadow(0 0 10px rgba(192, 150, 106, 0.35));
+  }
+  .card.wyrd .title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: #ece0cf;
+    letter-spacing: 3px;
+  }
+  .card.wyrd .subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: #b0a898;
+  }
+  .card.wyrd .cta {
+    color: #e8c89e;
+    border-color: var(--border-bronze);
+    background: rgba(192, 150, 106, 0.09);
   }
 
   /* ─── FC 26 card ─── */
@@ -435,6 +470,57 @@
         </svg>
         <div class="title">Gigsy</div>
         <div class="subtitle">gig shifts &amp; expenses</div>
+        <span class="cta">
+          Open
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+
+      <a class="card wyrd" href="https://wyrd-web.pages.dev/" aria-label="Open Wyrd">
+        <svg class="art" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.75"/>
+          <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="1" opacity="0.35" stroke-dasharray="2 4"/>
+          <g stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none">
+            <path d="M32 20 L32 44"/>
+            <path d="M32 24 L40 28"/>
+            <path d="M32 32 L40 36"/>
+          </g>
+          <g stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.75">
+            <path d="M14 14 L18 18"/>
+            <path d="M50 14 L46 18"/>
+            <path d="M14 50 L18 46"/>
+            <path d="M50 50 L46 46"/>
+          </g>
+        </svg>
+        <div class="title">Wyrd</div>
+        <div class="subtitle">runes &amp; fate-casting</div>
+        <span class="cta">
+          Enter
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+
+      <a class="card wyrd" href="https://wyrd-web.pages.dev/rune-lab" aria-label="Open Wyrd Rune Lab">
+        <svg class="art" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <path d="M24 10 L24 24 L14 50 Q14 56 20 56 L44 56 Q50 56 50 50 L40 24 L40 10 Z"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M22 10 L42 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M18 40 Q22 36 26 40 Q30 44 34 40 Q38 36 42 40 Q46 44 50 40"
+                fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+          <g stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none">
+            <path d="M32 32 L32 50"/>
+            <path d="M32 36 L37 32"/>
+            <path d="M32 42 L27 46"/>
+          </g>
+          <circle cx="46" cy="16" r="1.5" fill="currentColor" opacity="0.9"/>
+          <circle cx="18" cy="20" r="1" fill="currentColor" opacity="0.7"/>
+        </svg>
+        <div class="title">Rune Lab</div>
+        <div class="subtitle">forge &amp; study of runes</div>
         <span class="cta">
           Open
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
